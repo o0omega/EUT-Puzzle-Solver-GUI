@@ -57,9 +57,6 @@ Discord: @m6ga
     )
     label.pack(pady=20)
 
-    close_button = ctk.CTkButton(info_window_instance, text="Close", command=info_window_instance.destroy)
-    close_button.pack(pady=10)
-
 console_window = None
 console_text = None
 
@@ -77,11 +74,18 @@ def open_console():
 
     console_window.after(10, lambda: console_window.focus_force())
 
-    console_text = ctk.CTkTextbox(console_window, wrap="word", height=250)
-    console_text.pack(pady=10, padx=10, fill="both", expand=True)
+    button_frame = ctk.CTkFrame(console_window)
+    button_frame.pack(anchor="nw", padx=10, pady=5)
+    button_frame.configure(fg_color='transparent')
 
-    clear_button = ctk.CTkButton(console_window, text="Clear", command=clear_console)
-    clear_button.pack(pady=5)
+    close_button = ctk.CTkButton(button_frame, text="Close", command=console_window.destroy, width=60, height=20, font=("", 15))
+    close_button.pack(side="left", padx=5)
+
+    pin_button = ctk.CTkButton(button_frame, text="Pin", command=lambda: pin_window(console_window, pin_button), width=40, height=20, font=("", 15))
+    pin_button.pack(side="left")
+
+    console_text = ctk.CTkTextbox(console_window, wrap="word", height=250)
+    console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
 
     sys.stdout.write = write_console
     sys.stderr.write = write_console
@@ -95,12 +99,10 @@ def clear_console():
     if console_text is not None:
         console_text.delete("1.0", "end")
 
-
-def pin_window():
-    global app
-    current_topmost = app.attributes('-topmost')
-    app.attributes('-topmost', not current_topmost)
-    pin_button.configure(text="Unpin" if not current_topmost else "Pin")
+def pin_window(window, button):
+    current_topmost = window.attributes('-topmost')
+    window.attributes('-topmost', not current_topmost)
+    button.configure(text="Unpin" if not current_topmost else "Pin")
 
 def parse_entries_puzzle1_2():
     try:
@@ -322,10 +324,12 @@ app.after(10, lambda: set_initial_focus())
 info_button = ctk.CTkButton(app, text="?", command=info_window, width=20, height=20, font=("", 15))
 info_button.place(x=5, y=5)
 
-pin_button = ctk.CTkButton(app, text="Pin", command=pin_window, width=40, height=20, font=("", 15))
-pin_button.place(x=30, y=5)
+pin_button = ctk.CTkButton(app, text="Pin", command=lambda: pin_window(app, pin_button), width=40, height=20, font=("", 15))
+pin_button.place(x=113, y=5)
 
 console_button = ctk.CTkButton(app, text="Console", command=open_console, width=80, height=20, font=("", 15))
-console_button.place(x=73, y=5)
+console_button.place(x=30, y=5)
 
 app.mainloop()
+
+# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable EUTPuzzle.py
