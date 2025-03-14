@@ -4,22 +4,20 @@ from ctypes import windll
 # from keyboard import add_hotkey maybe will add later
 
 app = ctk.CTk()
-app.geometry("740x450")
-app.title("EUT Harry's Puzzle Solver 27")
+app.geometry("498x450")
+app.title("HPSolver")
 app.iconbitmap("M.ico")
 
 tabview = ctk.CTkTabview(app)
 tabview.pack(pady=14, padx=20, expand=True, fill="both")
 
 tabs = [
-    "Puzzle #1",
-    "Puzzle #2",
+    "Puzzle #1/#2",
     "Puzzle #3",
     "Puzzle #4"
 ]
 custom_limits = {
-    "Puzzle #1": 3,
-    "Puzzle #2": 3,
+    "Puzzle #1/#2": 3,
     "Puzzle #3": 4,
     "Puzzle #4": 11
 }
@@ -59,24 +57,23 @@ info_window = None
 def open_info():
     try:
         global info_window
-
         if info_window is not None and info_window.winfo_exists():
             info_window.lift()
             info_window.focus_force()
             return
 
         info_window = ctk.CTkToplevel(app)
-        info_window.geometry("350x320")
+        info_window.geometry("350x400")
         info_window.overrideredirect(True)
         info_window.wm_attributes("-transparentcolor", "#242424")
         info_window.after(10, lambda: info_window.focus_force())
 
-        mainframe = ctk.CTkFrame(info_window, width=350, height=350, border_color="#1f6aa5",corner_radius=10)
-        mainframe.pack()
+        mainframe = ctk.CTkFrame(info_window, width=350, height=400, corner_radius=10)
+        mainframe.pack(fill='both')
 
-        titlebar = ctk.CTkFrame(mainframe, height=22, fg_color='#1f6aa5', corner_radius=5)
+        titlebar = ctk.CTkFrame(mainframe, height=25, fg_color='#1f6aa5', corner_radius=5)
+        titlebar.pack_propagate(False)
         titlebar.pack(fill='x', pady=(5, 0), padx=5)
-        titlebar.pack_propagate(False) 
         titlebarify(titlebar, info_window, True)
 
         close = ctk.CTkButton(titlebar,
@@ -87,10 +84,10 @@ def open_info():
                               text='Close',
                               font=("", 10),
                               command=info_window.destroy)
-        close.pack(side='right', padx=1)
+        close.pack(side='right', padx=2)
 
         labelinfo = ctk.CTkLabel(mainframe, 
-            text='Version 1.2', 
+            text='Version 1.3', 
             font=("", 20, 'bold'),
             anchor="center",
             width=280,
@@ -107,11 +104,13 @@ Key Binds:
 "Enter" = Enter (Find order)
 "[" = Previous (Go to previous puzzle)
 "]" = Next (Go to next puzzle)
-"F1" = Click through the main window toggle
+"F1" = Click through the order window toggle
+(Make sure to be focused on the correct window
+for keybinds to work properly)
             
 Puzzle #4 entries take all 3 RGB values of one color
 separated by either "t" or "-" (both can be used)
-Puzzle #2 can be used for Puzzle #1 as well
+Puzzle #2 can be used for Puzzle #1/#2 as well
 
 Made by ozomega
 Discord: @m6ga
@@ -121,47 +120,10 @@ Discord: @m6ga
             justify="left",
             width=280
         )
-        label.pack(padx=5, pady=(0,10))
+        label.pack(padx=5, pady=(0,2))
     except Exception as e:
         sys.__stdout__.write(f"Error processing open_info: {e}\n")
 
-
-console_window = None
-console_text = None
-def open_console():
-    try:
-        global console_window, console_text
-
-        if console_window is not None and console_window.winfo_exists():
-            console_window.lift()
-            console_window.focus_force()
-            return
-
-        console_window = ctk.CTkToplevel(app)
-        console_window.geometry("500x300")
-        console_window.title("Console Output")
-        console_window.iconbitmap("RM.ico")
-
-        console_window.after(10, lambda: console_window.focus_force())
-        console_window.after(200, lambda: console_window.iconbitmap("RM.ico"))
-
-        button_frame = ctk.CTkFrame(console_window)
-        button_frame.pack(anchor="nw", padx=10, pady=5)
-        button_frame.configure(fg_color='transparent')
-
-        close_button = ctk.CTkButton(button_frame, text="Close", command=console_window.destroy, width=60, height=20, font=("", 15))
-        close_button.pack(side="left", padx=5)
-
-        pin_button = ctk.CTkButton(button_frame, text="Pin", command=lambda: pin_window(console_window, pin_button), width=40, height=20, font=("", 15))
-        pin_button.pack(side="left")
-
-        console_text = ctk.CTkTextbox(console_window, wrap="word", height=250)
-        console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
-
-        app.after(100, setup_redirection)
-
-    except Exception as e:
-        sys.__stdout__.write(f"Error processing open_console: {e}\n")
 
 def setup_redirection():
     sys.stdout.write = write_console
@@ -183,6 +145,129 @@ def clear_console():
     except Exception as e:
         print(f"Error processing clear_console: {e}")
 
+console_window = None
+console_text = None
+def open_console():
+    try:
+        global console_window, console_text
+
+        if console_window is not None and console_window.winfo_exists():
+            console_window.lift()
+            console_window.focus_force()
+            return
+
+        console_window = ctk.CTkToplevel(app)
+        console_window.geometry("500x300")
+        console_window.overrideredirect(True)
+        console_window.wm_attributes("-transparentcolor", "#242424")
+        console_window.after(10, lambda: console_window.focus_force())
+
+        mainframe = ctk.CTkFrame(console_window, width=500, height=300, corner_radius=10)
+        mainframe.pack_propagate(False)
+        mainframe.pack(fill='both')
+
+        titlebar = ctk.CTkFrame(mainframe, height=25, fg_color='#1f6aa5', corner_radius=5)
+        titlebar.pack_propagate(False)
+        titlebar.pack(fill='x', pady=5, padx=5)
+        titlebarify(titlebar, console_window, True)
+
+        close = ctk.CTkButton(titlebar, height=20, width=15, corner_radius=5, fg_color='#002037', text='Close', font=("", 10), command=console_window.destroy)
+        close.pack(side='right', padx=2)
+
+        pin = ctk.CTkButton(titlebar, height=20, width=15, corner_radius=5, fg_color='#002037', text='Pin', font=("", 10), command=lambda: pin_window(console_window, pin))
+        pin.pack(side='left', padx=2)
+
+        console_text = ctk.CTkTextbox(mainframe, wrap="word", height=250)
+        console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
+
+        app.after(100, setup_redirection)
+
+    except Exception as e:
+        sys.__stdout__.write(f"Error processing open_console: {e}\n")
+
+def change_transparency(value):
+    try:
+        order_window.attributes("-alpha", float(value))
+    except Exception as e:
+        print(f"Error processing change_transparency: {e}")
+
+clickthrough = False
+clickthroughlabel = None
+def toggle_clickthrough(event=None):
+    try:
+        global clickthrough, clickthroughlabel 
+        hwnd = windll.user32.GetForegroundWindow()
+        style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
+
+        if clickthrough:
+            windll.user32.SetWindowLongW(hwnd, -20, style | 0x00000020)  # WS_EX_TRANSPARENT
+            if clickthroughlabel:
+                clickthroughlabel.configure(text="Clickthrough enabled", text_color='#c4ffa8')
+        else:
+            windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # WS_EX_TRANSPARENT removed
+            if clickthroughlabel:
+                clickthroughlabel.configure(text="Clickthrough disabled", text_color='#ffa8a8')
+
+        clickthrough = not clickthrough
+    except Exception as e:
+        print(f"Error processing toggle_clickthrough: {e}")
+
+order_window = None
+def open_order():
+    try:
+        global order_window, clickthroughlabel, labels_dict
+
+        if order_window is not None and order_window.winfo_exists():
+            order_window.lift()
+            order_window.focus_force()
+            return
+
+        order_window = ctk.CTkToplevel(app)
+        order_window.geometry("262x340")
+        order_window.overrideredirect(True)
+        order_window.wm_attributes("-transparentcolor", "#242424")
+        order_window.after(10, lambda: order_window.focus_force())
+
+        mainframe = ctk.CTkFrame(order_window, width=262, height=340, corner_radius=10)
+        mainframe.pack_propagate(False)
+        mainframe.pack(fill='both')
+
+        titlebar = ctk.CTkFrame(mainframe, height=25, fg_color='#1f6aa5', corner_radius=5)
+        titlebar.pack_propagate(False)
+        titlebar.pack(fill='x', pady=5, padx=5)
+        titlebarify(titlebar, order_window, True)
+
+        close = ctk.CTkButton(titlebar, height=20, width=15, corner_radius=5, fg_color='#002037', text='Close', font=("", 10), command=order_window.destroy)
+        close.pack(side='right', padx=2)
+
+        pin = ctk.CTkButton(titlebar, height=20, width=15, corner_radius=5, fg_color='#002037', text='Pin', font=("", 10), command=lambda: pin_window(order_window, pin))
+        pin.pack(side='left', padx=2)
+
+        frame = ctk.CTkFrame(mainframe)
+        frame.pack()
+
+        grid = ctk.CTkFrame(frame)
+        grid.pack()
+
+        labels_dict["order"] = []
+        for i in range(5):
+            row_labels = []
+            for j in range(5):
+                label = ctk.CTkLabel(grid, width=50, height=50, justify="center", text="", fg_color="#025c9d", font=("", 16, "bold"))
+                label.grid(row=i, column=j, padx=1, pady=1)
+                row_labels.append(label)
+            labels_dict["order"].append(row_labels)
+
+        transparency_slider = ctk.CTkSlider(mainframe, from_=0.1, to=1, number_of_steps=10, state="normal", width=200, height=5, command=change_transparency)
+        transparency_slider.set(1)
+        transparency_slider.pack(pady=(10, 5))
+
+        clickthroughlabel = ctk.CTkLabel(mainframe, text="Clickthrough disabled", text_color='#ffa8a8')
+        clickthroughlabel.pack()
+
+    except Exception as e:
+        sys.__stdout__.write(f"Error processing open_order: {e}\n")
+
 def pin_window(window, button):
     try:
         current_topmost = window.attributes('-topmost')
@@ -191,51 +276,12 @@ def pin_window(window, button):
     except Exception as e:
         print(f"Error processing pin_window: {e}")
 
-clickthrough = False
-def toggle_clickthrough(event=None):
-    try:
-        global clickthrough
-        hwnd = windll.user32.GetForegroundWindow()
-        style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
-
-        if clickthrough:
-            windll.user32.SetWindowLongW(hwnd, -20, style | 0x00000020)  # WS_EX_TRANSPARENT
-            clickthroughlabel.configure(text="Clickthrough enabled", text_color='#c4ffa8')
-        else:
-            windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # WS_EX_TRANSPARENT removed
-            clickthroughlabel.configure(text="Clickthrough disabled", text_color='#ffa8a8')
-
-        clickthrough = not clickthrough
-    except Exception as e:
-        print(f"Error processing toggle_clickthrough: {e}")
-
-
-def parse_entries_puzzle1():
-    try:
-        tab = tabview.get()
-        values = [int(entry.get()) if entry.get().isdigit() else 0 for row in entries_dict[tab] for entry in row]
-        print(f"Puzzle #1 Entries:", values)
-        
-        non_zero_values = [value for value in values if value != 0]
-        order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
-        ordered_values = [order.get(num, 0) for num in values]
-        print(f"Puzzle #1 Order:", ordered_values)
-
-        label_index = 0
-        for i in range(5):
-            for j in range(5):
-                labels_dict[tab][i][j].configure(text=str(ordered_values[label_index]))
-                label_index += 1
-
-    except Exception as e:
-        print(f"Error processing Puzzle #1: {e}")
-
-def parse_entries_puzzle2():
+def parse_entries_puzzle1_2():
     try:
         tab = tabview.get()
         values = [entry.get() if entry.get() else '0' for row in entries_dict[tab] for entry in row]
-        print(f"Puzzle #2 Entries:", values)
-
+        print(f"Puzzle #1/#2 Entries:", values)
+        
         replace = str.maketrans("!@#$%^&*()", "1234567890")
         values = [int(num.translate(replace)) for num in values]
         print(f"Puzzle #2 Converted:", values)
@@ -243,16 +289,18 @@ def parse_entries_puzzle2():
         non_zero_values = [value for value in values if value != 0]
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
         ordered_values = [order.get(num, 0) for num in values]
-        print(f"Puzzle #2 Order:", ordered_values)
+        print(f"Puzzle #1/#2 Order:", ordered_values)
 
-        label_index = 0
-        for i in range(5):
-            for j in range(5):
-                labels_dict[tab][i][j].configure(text=str(ordered_values[label_index]))
-                label_index += 1
-            
+        if "order" in labels_dict:
+            label_index = 0
+            for i in range(5):
+                for j in range(5):
+                    labels_dict["order"][i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
+                    label_index += 1
+
     except Exception as e:
-        print(f"Error processing Puzzle #2: {e}")
+        print(f"Error processing Puzzle #1/#2: {e}")
+
 
 def parse_entries_puzzle3():
     try:
@@ -269,11 +317,12 @@ def parse_entries_puzzle3():
         ordered_values = [order.get(i, 0) for i in range(25)]
         print(f"Puzzle #3 Order:", ordered_values)
 
-        label_index = 0
-        for i in range(5):
-            for j in range(5):
-                labels_dict[tab][i][j].configure(text=str(ordered_values[label_index]))
-                label_index += 1
+        if "order" in labels_dict:
+            label_index = 0
+            for i in range(5):
+                for j in range(5):
+                    labels_dict["order"][i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
+                    label_index += 1
 
     except Exception as e:
         print(f"Error processing Puzzle #3: {e}")
@@ -319,11 +368,12 @@ def parse_entries_puzzle4():
         ordered_values = [order.get(num, 0) for num in hsv_values]
         print(f"Puzzle #4 Order:", ordered_values)
 
-        label_index = 0
-        for i in range(5):
-            for j in range(5):
-                labels_dict[tab][i][j].configure(text=str(ordered_values[label_index]))
-                label_index += 1
+        if "order" in labels_dict:
+            label_index = 0
+            for i in range(5):
+                for j in range(5):
+                    labels_dict["order"][i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
+                    label_index += 1
 
     except Exception as e:
         print(f"Error processing Puzzle #4: {e}")
@@ -357,10 +407,8 @@ def reset_entries(event=None):
 def output_order(event=None):
     try:
         tab = tabview.get()
-        if tab == "Puzzle #1":
-            parse_entries_puzzle1()
-        elif tab == "Puzzle #2":
-            parse_entries_puzzle2()
+        if tab == "Puzzle #1/#2":
+            parse_entries_puzzle1_2()
         elif tab == "Puzzle #3":
             parse_entries_puzzle3()
         elif tab == "Puzzle #4":
@@ -388,13 +436,8 @@ def prev_puzzle(event=None):
     except Exception as e:
         print(f"Error processing prev_puzzle: {e}")
 
-def change_transparency(value):
-    try:
-        app.attributes("-alpha", float(value))
-    except Exception as e:
-        print(f"Error processing change_transparency: {e}")
-
-app.bind('<F1>', toggle_clickthrough)
+# keybinds
+app.bind_all('<F1>', toggle_clickthrough)
 app.bind('<Return>', output_order)
 app.bind('[', prev_puzzle)
 app.bind(']', next_puzzle)
@@ -403,24 +446,15 @@ app.bind('r', reset_entries)
 for tabname in tabs:
     tab = tabview.add(tabname)
 
-    frame1 = ctk.CTkFrame(tab)
-    frame1.pack(side="left", padx=10, pady=10)
+    frame = ctk.CTkFrame(tab)
+    frame.pack(padx=10, pady=10)
 
-    frame1grid1 = ctk.CTkFrame(frame1)
-    frame1grid2 = ctk.CTkFrame(frame1)
-    frame1grid1.pack(side="top")
-    frame1grid2.pack(side="bottom", pady=10)
+    grid1 = ctk.CTkFrame(frame)
+    grid2 = ctk.CTkFrame(frame)
+    grid1.pack(side="top",anchor='center')
+    grid2.pack(side="bottom", pady=10,anchor='center')
 
-    frame1grid2.configure(fg_color='transparent')
-
-    frame2 = ctk.CTkFrame(tab)
-    frame2.pack(side="right", padx=10, pady=10)
-
-    frame2grid1 = ctk.CTkFrame(frame2)
-    frame2grid2 = ctk.CTkFrame(frame2)
-    frame2grid1.pack(side="top")
-    frame2grid2.pack(side="bottom", pady=10)
-    frame2grid2.configure(fg_color='transparent')
+    grid2.configure(fg_color='transparent')
 
     entries = []
     n = 45 if tabname != "Puzzle #4" else 85
@@ -430,7 +464,7 @@ for tabname in tabs:
         validate_cmd = app.register(lambda text, length, tab=tabname: limit_input(text, length, tab))
         for j in range(5):
             entry = ctk.CTkEntry(
-                frame1grid1,
+                grid1,
                 width=n,
                 height=45,
                 justify="center",
@@ -442,43 +476,22 @@ for tabname in tabs:
             entry.grid(row=i+1, column=j)
             row_entries.append(entry)
         entries.append(row_entries)
-
-    labels = []
-    for i in range(5):
-        row_labels = []
-        for j in range(5):
-            label = ctk.CTkLabel(frame2grid1, width=45, height=45, justify="center", text="0", fg_color="#025c9d", font=("", 16, "bold"))
-            label.grid(row=i+1, column=j)
-            row_labels.append(label)
-        labels.append(row_labels)
-
+        
     entries_dict[tabname] = entries
-    labels_dict[tabname] = labels
 
-    inputlabel = ctk.CTkLabel(frame1grid1, width=100, text="Input", font=("", 20))
+    inputlabel = ctk.CTkLabel(grid1, width=100, text="Input", font=("", 20))
     inputlabel.grid(row=0, column=0, columnspan=5, pady=10)
 
-    outputlabel = ctk.CTkLabel(frame2grid1, width=100, text="Order", font=("", 20))
-    outputlabel.grid(row=0, column=0, columnspan=5, pady=10)
-
-    if tabname == "Puzzle #1":
-        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle1, font=("", 20))
-    elif tabname == "Puzzle #2":
-        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle2, font=("", 20))
+    if tabname == "Puzzle #1/#2":
+        enterbutton = ctk.CTkButton(grid2, width=100, text="Enter", command=parse_entries_puzzle1_2, font=("", 20))
     elif tabname == "Puzzle #3":
-        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle3, font=("", 20))
+        enterbutton = ctk.CTkButton(grid2, width=100, text="Enter", command=parse_entries_puzzle3, font=("", 20))
     else:
-        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle4, font=("", 20))
+        enterbutton = ctk.CTkButton(grid2, width=100, text="Enter", command=parse_entries_puzzle4, font=("", 20))
     enterbutton.grid(row=0, column=1, padx=5)
 
-    resetbutton = ctk.CTkButton(frame1grid2, width=100, text='Reset', command=reset_entries, font=("", 20))
+    resetbutton = ctk.CTkButton(grid2, width=100, text='Reset', command=reset_entries, font=("", 20))
     resetbutton.grid(row=0, column=0, padx=5)
-
-    previousbutton = ctk.CTkButton(frame2grid2, width=100, text="Previous", command=prev_puzzle, font=("", 20))
-    previousbutton.grid(row=0, column=0, padx=5)
-
-    nextbutton = ctk.CTkButton(frame2grid2, width=100, text="Next", command=next_puzzle, font=("", 20))
-    nextbutton.grid(row=0, column=1, padx=5)
 
 app.after(10, lambda: set_initial_focus())
 
@@ -486,18 +499,16 @@ info_button = ctk.CTkButton(app, text="?", command=open_info, width=20, height=2
 info_button.place(x=5, y=5)
 
 pin_button = ctk.CTkButton(app, text="Pin", command=lambda: pin_window(app, pin_button), width=40, height=20, font=("", 15))
-pin_button.place(x=113, y=5)
+pin_button.place(x=30, y=5)
 
-console_button = ctk.CTkButton(app, text="Console", command=open_console, width=80, height=20, font=("", 15))
-console_button.place(x=30, y=5)
+console_button = ctk.CTkButton(app, text="Console", command=open_console, width=80, height=20, font=("", 15), bg_color='#2b2b2b')
+console_button.place(x=30, y=403)
 
-transparencry_slider = ctk.CTkSlider(app, from_=0.1, to=1, number_of_steps=10, state="normal", width=200,height=5, command=change_transparency)
-transparencry_slider.set(1)
-transparencry_slider.place(x=270, y=10)
+order = ctk.CTkButton(app, text="Order", width=20, height=20, font=("",15), bg_color='#2b2b2b', command=open_order)
+order.place(x=416, y=403)
 
-clickthroughlabel = ctk.CTkLabel(app, text="Clickthrough disabled", bg_color="#2b2b2b", text_color='#ffa8a8')
-clickthroughlabel.place(x=308, y=50)
+
 app.mainloop()
 
-# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --include-data-files="RM.ico=RM.ico" --windows-icon-from-ico=M.ico HPSolver.py
+# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --windows-icon-from-ico=M.ico HPSolver.py
 # Nuitka library required to use compiling line above, put ico files in the same repository as the script (the files are present on github).
