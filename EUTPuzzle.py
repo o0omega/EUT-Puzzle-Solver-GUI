@@ -1,9 +1,11 @@
 import customtkinter as ctk
 import sys
+from ctypes import windll
+# from keyboard import add_hotkey maybe will add later
 
 app = ctk.CTk()
 app.geometry("740x450")
-app.title("EUT Harry's Puzzle Solver")
+app.title("EUT Harry's Puzzle Solver 27")
 app.iconbitmap("M.ico")
 
 tabview = ctk.CTkTabview(app)
@@ -24,6 +26,35 @@ custom_limits = {
 entries_dict = {}
 labels_dict = {}
 
+def darken(widget, factor=0.8): # basically custom hover function for frames
+    initial_color = widget.cget("fg_color").lstrip('#')
+    rgb = tuple(int(initial_color[i:i+2], 16) for i in (0, 2, 4))
+    darken_rgb = tuple(max(0, min(255, int(c * factor))) for c in rgb)
+    darken_color = '{:02x}{:02x}{:02x}'.format(*darken_rgb)
+    def on_enter(event):
+        widget.configure(fg_color=f"#{darken_color}")
+    def on_leave(event):
+        widget.configure(fg_color=f"#{initial_color}")
+
+    widget.bind("<Enter>", on_enter)
+    widget.bind("<Leave>", on_leave)
+
+def titlebarify(widget, window, darkening=False):
+    if darkening:
+        darken(widget)
+
+    def start_move(event):
+        window._offset_x = event.x
+        window._offset_y = event.y
+
+    def do_move(event):
+        new_x = event.x_root - window._offset_x
+        new_y = event.y_root - window._offset_y
+        window.geometry(f"+{new_x}+{new_y}")
+
+    widget.bind("<ButtonPress-1>", start_move)
+    widget.bind("<B1-Motion>", do_move)
+
 info_window = None
 def open_info():
     try:
@@ -35,13 +66,38 @@ def open_info():
             return
 
         info_window = ctk.CTkToplevel(app)
-        info_window.geometry("350x300")
-        info_window.title("Information")
-
+        info_window.geometry("350x320")
+        info_window.overrideredirect(True)
+        info_window.wm_attributes("-transparentcolor", "#242424")
         info_window.after(10, lambda: info_window.focus_force())
-        info_window.after(200, lambda: info_window.iconbitmap("DM.ico"))
 
-        label = ctk.CTkLabel(info_window, 
+        mainframe = ctk.CTkFrame(info_window, width=350, height=350, border_color="#1f6aa5",corner_radius=10)
+        mainframe.pack()
+
+        titlebar = ctk.CTkFrame(mainframe, height=22, fg_color='#1f6aa5', corner_radius=5)
+        titlebar.pack(fill='x', pady=(5, 0), padx=5)
+        titlebar.pack_propagate(False) 
+        titlebarify(titlebar, info_window, True)
+
+        close = ctk.CTkButton(titlebar,
+                              height=20,
+                              width=15,
+                              corner_radius=5,
+                              fg_color='#002037',
+                              text='Close',
+                              font=("", 10),
+                              command=info_window.destroy)
+        close.pack(side='right', padx=1)
+
+        labelinfo = ctk.CTkLabel(mainframe, 
+            text='Version 1.2', 
+            font=("", 20, 'bold'),
+            anchor="center",
+            width=280,
+        )
+        labelinfo.pack()
+
+        label = ctk.CTkLabel(mainframe, 
             text=(
 """
 Key Binds:
@@ -51,6 +107,7 @@ Key Binds:
 "Enter" = Enter (Find order)
 "[" = Previous (Go to previous puzzle)
 "]" = Next (Go to next puzzle)
+"F1" = Click through the main window toggle
             
 Puzzle #4 entries take all 3 RGB values of one color
 separated by either "t" or "-" (both can be used)
@@ -62,12 +119,12 @@ Discord: @m6ga
             ), 
             font=("", 15),
             justify="left",
-            anchor="w",
             width=280
         )
-        label.pack(pady=20)
+        label.pack(padx=5, pady=(0,10))
     except Exception as e:
         sys.__stdout__.write(f"Error processing open_info: {e}\n")
+
 
 console_window = None
 console_text = None
@@ -133,6 +190,25 @@ def pin_window(window, button):
         button.configure(text="Unpin" if not current_topmost else "Pin")
     except Exception as e:
         print(f"Error processing pin_window: {e}")
+
+clickthrough = False
+def toggle_clickthrough(event=None):
+    try:
+        global clickthrough
+        hwnd = windll.user32.GetForegroundWindow()
+        style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
+
+        if clickthrough:
+            windll.user32.SetWindowLongW(hwnd, -20, style | 0x00000020)  # WS_EX_TRANSPARENT
+            clickthroughlabel.configure(text="Clickthrough enabled", text_color='#c4ffa8')
+        else:
+            windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # WS_EX_TRANSPARENT removed
+            clickthroughlabel.configure(text="Clickthrough disabled", text_color='#ffa8a8')
+
+        clickthrough = not clickthrough
+    except Exception as e:
+        print(f"Error processing toggle_clickthrough: {e}")
+
 
 def parse_entries_puzzle1():
     try:
@@ -312,6 +388,13 @@ def prev_puzzle(event=None):
     except Exception as e:
         print(f"Error processing prev_puzzle: {e}")
 
+def change_transparency(value):
+    try:
+        app.attributes("-alpha", float(value))
+    except Exception as e:
+        print(f"Error processing change_transparency: {e}")
+
+app.bind('<F1>', toggle_clickthrough)
 app.bind('<Return>', output_order)
 app.bind('[', prev_puzzle)
 app.bind(']', next_puzzle)
@@ -408,7 +491,13 @@ pin_button.place(x=113, y=5)
 console_button = ctk.CTkButton(app, text="Console", command=open_console, width=80, height=20, font=("", 15))
 console_button.place(x=30, y=5)
 
+transparencry_slider = ctk.CTkSlider(app, from_=0.1, to=1, number_of_steps=10, state="normal", width=200,height=5, command=change_transparency)
+transparencry_slider.set(1)
+transparencry_slider.place(x=270, y=10)
+
+clickthroughlabel = ctk.CTkLabel(app, text="Clickthrough disabled", bg_color="#2b2b2b", text_color='#ffa8a8')
+clickthroughlabel.place(x=308, y=50)
 app.mainloop()
 
-# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --include-data-files="DM.ico=DM.ico" --include-data-files="RM.ico=RM.ico" --windows-icon-from-ico=M.ico EUTPuzzle.py
-# Nuitka library required to use compiling line above, put ico files in the same repository as the script (the files are present on github).4
+# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --include-data-files="RM.ico=RM.ico" --windows-icon-from-ico=M.ico HPSolver.py
+# Nuitka library required to use compiling line above, put ico files in the same repository as the script (the files are present on github).
