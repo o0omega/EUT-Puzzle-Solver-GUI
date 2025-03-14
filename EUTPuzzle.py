@@ -3,7 +3,7 @@ import sys
 
 app = ctk.CTk()
 app.geometry("740x450")
-app.title("EUT Harry's Puzzle")
+app.title("EUT Harry's Puzzle Solver")
 app.iconbitmap("M.ico")
 
 tabview = ctk.CTkTabview(app)
@@ -37,7 +37,6 @@ def open_info():
         info_window = ctk.CTkToplevel(app)
         info_window.geometry("350x300")
         info_window.title("Information")
-        
 
         info_window.after(10, lambda: info_window.focus_force())
         info_window.after(200, lambda: info_window.iconbitmap("DM.ico"))
@@ -68,7 +67,7 @@ Discord: @m6ga
         )
         label.pack(pady=20)
     except Exception as e:
-        print(f"Error processing open_info: {e}")
+        sys.__stdout__.write(f"Error processing open_info: {e}\n")
 
 console_window = None
 console_text = None
@@ -102,10 +101,14 @@ def open_console():
         console_text = ctk.CTkTextbox(console_window, wrap="word", height=250)
         console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
 
-        sys.stdout.write = write_console
-        sys.stderr.write = write_console
+        app.after(100, setup_redirection)
+
     except Exception as e:
-        print(f"Error processing open_console: {e}")
+        sys.__stdout__.write(f"Error processing open_console: {e}\n")
+
+def setup_redirection():
+    sys.stdout.write = write_console
+    sys.stderr.write = write_console
 
 def write_console(text):
     try:
@@ -113,7 +116,8 @@ def write_console(text):
             console_text.insert("end", text)
             console_text.see("end")
     except Exception as e:
-        print(f"Error processing write_console: {e}")
+        sys.__stdout__.write(f"Error in write_console: {e}\n")
+        sys.__stdout__.write(text)
 
 def clear_console():
     try:
@@ -407,4 +411,4 @@ console_button.place(x=30, y=5)
 app.mainloop()
 
 # python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --include-data-files="DM.ico=DM.ico" --include-data-files="RM.ico=RM.ico" --windows-icon-from-ico=M.ico EUTPuzzle.py
-# Nuitka library required to use compiling line above, put ico files in the same repository as the script (the files are present on github).
+# Nuitka library required to use compiling line above, put ico files in the same repository as the script (the files are present on github).4
