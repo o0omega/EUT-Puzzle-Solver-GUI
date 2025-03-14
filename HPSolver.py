@@ -1,12 +1,23 @@
 import customtkinter as ctk
-import sys
+import sys, os
 from ctypes import windll
 # from keyboard import add_hotkey maybe will add later
+
+def resource_path(relative_path):
+
+    if hasattr(sys, '_MEIPASS'):
+        # Running as a PyInstaller bundle
+        return os.path.join(sys._MEIPASS, relative_path)
+    else:
+        # Running in development
+        return os.path.join(os.path.abspath("."), relative_path)
+
+icon_path = resource_path("M.ico")
 
 app = ctk.CTk()
 app.geometry("498x450")
 app.title("HPSolver")
-app.iconbitmap(r'C:\Users\ozo\Documents\vs code stuff\eut lol\GUI Puzzle\M.ico')
+app.iconbitmap(resource_path("M.ico"))
 
 tabview = ctk.CTkTabview(app)
 tabview.pack(pady=14, padx=20, expand=True, fill="both")
