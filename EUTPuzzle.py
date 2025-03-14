@@ -26,23 +26,25 @@ labels_dict = {}
 
 info_window = None
 def open_info():
-    global info_window
+    try:
+        global info_window
 
-    if info_window is not None and info_window.winfo_exists():
-        info_window.lift()
-        info_window.focus_force()
-        return
+        if info_window is not None and info_window.winfo_exists():
+            info_window.lift()
+            info_window.focus_force()
+            return
 
-    info_window = ctk.CTkToplevel(app)
-    info_window.geometry("350x300")
-    info_window.title("Information")
-    
+        info_window = ctk.CTkToplevel(app)
+        info_window.geometry("350x300")
+        info_window.title("Information")
+        
 
-    info_window.after(10, lambda: info_window.focus_force())
-    info_window.after(200, lambda: info_window.iconbitmap("DM.ico"))
+        info_window.after(10, lambda: info_window.focus_force())
+        info_window.after(200, lambda: info_window.iconbitmap("DM.ico"))
 
-    label = ctk.CTkLabel(info_window, 
-        text=("""
+        label = ctk.CTkLabel(info_window, 
+            text=(
+"""
 Key Binds:
 "Tab" = Go to next entry window
 "Shift+Tab" = Go to previous entry window
@@ -50,68 +52,83 @@ Key Binds:
 "Enter" = Enter (Find order)
 "[" = Previous (Go to previous puzzle)
 "]" = Next (Go to next puzzle)
-              
+            
 Puzzle #4 entries take all 3 RGB values of one color
 separated by either "t" or "-" (both can be used)
+Puzzle #2 can be used for Puzzle #1 as well
 
 Made by ozomega
 Discord: @m6ga
 """
-        ), 
-        font=("", 15),
-        justify="left",
-        anchor="w",
-        width=280
-    )
-    label.pack(pady=20)
+            ), 
+            font=("", 15),
+            justify="left",
+            anchor="w",
+            width=280
+        )
+        label.pack(pady=20)
+    except Exception as e:
+        print(f"Error processing open_info: {e}")
 
 console_window = None
 console_text = None
 def open_console():
-    global console_window, console_text
+    try:
+        global console_window, console_text
 
-    if console_window is not None and console_window.winfo_exists():
-        console_window.lift()
-        console_window.focus_force()
-        return
+        if console_window is not None and console_window.winfo_exists():
+            console_window.lift()
+            console_window.focus_force()
+            return
 
-    console_window = ctk.CTkToplevel(app)
-    console_window.geometry("500x300")
-    console_window.title("Console Output")
-    console_window.iconbitmap("RM.ico")
+        console_window = ctk.CTkToplevel(app)
+        console_window.geometry("500x300")
+        console_window.title("Console Output")
+        console_window.iconbitmap("RM.ico")
 
-    console_window.after(10, lambda: console_window.focus_force())
-    console_window.after(200, lambda: console_window.iconbitmap("RM.ico"))
+        console_window.after(10, lambda: console_window.focus_force())
+        console_window.after(200, lambda: console_window.iconbitmap("RM.ico"))
 
-    button_frame = ctk.CTkFrame(console_window)
-    button_frame.pack(anchor="nw", padx=10, pady=5)
-    button_frame.configure(fg_color='transparent')
+        button_frame = ctk.CTkFrame(console_window)
+        button_frame.pack(anchor="nw", padx=10, pady=5)
+        button_frame.configure(fg_color='transparent')
 
-    close_button = ctk.CTkButton(button_frame, text="Close", command=console_window.destroy, width=60, height=20, font=("", 15))
-    close_button.pack(side="left", padx=5)
+        close_button = ctk.CTkButton(button_frame, text="Close", command=console_window.destroy, width=60, height=20, font=("", 15))
+        close_button.pack(side="left", padx=5)
 
-    pin_button = ctk.CTkButton(button_frame, text="Pin", command=lambda: pin_window(console_window, pin_button), width=40, height=20, font=("", 15))
-    pin_button.pack(side="left")
+        pin_button = ctk.CTkButton(button_frame, text="Pin", command=lambda: pin_window(console_window, pin_button), width=40, height=20, font=("", 15))
+        pin_button.pack(side="left")
 
-    console_text = ctk.CTkTextbox(console_window, wrap="word", height=250)
-    console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
+        console_text = ctk.CTkTextbox(console_window, wrap="word", height=250)
+        console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
 
-    sys.stdout.write = write_console
-    sys.stderr.write = write_console
+        sys.stdout.write = write_console
+        sys.stderr.write = write_console
+    except Exception as e:
+        print(f"Error processing open_console: {e}")
 
 def write_console(text):
-    if console_text is not None:
-        console_text.insert("end", text)
-        console_text.see("end")
+    try:
+        if console_text is not None:
+            console_text.insert("end", text)
+            console_text.see("end")
+    except Exception as e:
+        print(f"Error processing write_console: {e}")
 
 def clear_console():
-    if console_text is not None:
-        console_text.delete("1.0", "end")
+    try:
+        if console_text is not None:
+            console_text.delete("1.0", "end")
+    except Exception as e:
+        print(f"Error processing clear_console: {e}")
 
 def pin_window(window, button):
-    current_topmost = window.attributes('-topmost')
-    window.attributes('-topmost', not current_topmost)
-    button.configure(text="Unpin" if not current_topmost else "Pin")
+    try:
+        current_topmost = window.attributes('-topmost')
+        window.attributes('-topmost', not current_topmost)
+        button.configure(text="Unpin" if not current_topmost else "Pin")
+    except Exception as e:
+        print(f"Error processing pin_window: {e}")
 
 def parse_entries_puzzle1():
     try:
@@ -233,47 +250,65 @@ def parse_entries_puzzle4():
 
 
 def limit_input(entry_text, max_length, tabname):
-    valid_chars = set("0123456789-t!@#$%^&*()")
-    return (len(entry_text) <= int(max_length) and 
-            all(char in valid_chars for char in entry_text))
+    try:
+        valid_chars = set("0123456789-t!@#$%^&*()")
+        return (len(entry_text) <= int(max_length) and 
+                all(char in valid_chars for char in entry_text))
+    except Exception as e:
+        print(f"Error processing limit_input: {e}")
 
 def set_initial_focus(event=None):
-    tab = tabview.get()
-    if tab in entries_dict and entries_dict[tab]:
-        entries_dict[tab][0][0].focus_set()
+    try:
+        tab = tabview.get()
+        if tab in entries_dict and entries_dict[tab]:
+            entries_dict[tab][0][0].focus_set()
+    except Exception as e:
+        print(f"Error processing set_initial_focus: {e}")
 
 def reset_entries(event=None):
-    tab = tabview.get()
-    for row in entries_dict[tab]:
-        for entry in row:
-            entry.delete(0, "end")
+    try:
+        tab = tabview.get()
+        for row in entries_dict[tab]:
+            for entry in row:
+                entry.delete(0, "end")
+    except Exception as e:
+        print(f"Error processing reset_entries: {e}")
 
-def bind_enter(event=None):
-    tab = tabview.get()
-    if tab == "Puzzle #1":
-        parse_entries_puzzle1()
-    elif tab == "Puzzle #2":
-        parse_entries_puzzle2()
-    elif tab == "Puzzle #3":
-        parse_entries_puzzle3()
-    elif tab == "Puzzle #4":
-        parse_entries_puzzle4()
+def output_order(event=None):
+    try:
+        tab = tabview.get()
+        if tab == "Puzzle #1":
+            parse_entries_puzzle1()
+        elif tab == "Puzzle #2":
+            parse_entries_puzzle2()
+        elif tab == "Puzzle #3":
+            parse_entries_puzzle3()
+        elif tab == "Puzzle #4":
+            parse_entries_puzzle4()
+    except Exception as e:
+        print(f"Error processing output_order: {e}")
 
 def next_puzzle(event=None):
-    tab = tabview.get()
-    tab_index = tabs.index(tab)
-    next_tab_index = (tab_index + 1) % len(tabs)
-    tabview.set(tabs[next_tab_index])
-    set_initial_focus()
+    try:
+        tab = tabview.get()
+        tab_index = tabs.index(tab)
+        next_tab_index = (tab_index + 1) % len(tabs)
+        tabview.set(tabs[next_tab_index])
+        set_initial_focus()
+    except Exception as e:
+        print(f"Error processing next_puzzle: {e}")
 
 def prev_puzzle(event=None):
-    tab = tabview.get()
-    tab_index = tabs.index(tab)
-    prev_tab_index = (tab_index - 1) % len(tabs)
-    tabview.set(tabs[prev_tab_index])
-    set_initial_focus()
+    try:
+        tab = tabview.get()
+        tab_index = tabs.index(tab)
+        prev_tab_index = (tab_index - 1) % len(tabs)
+        tabview.set(tabs[prev_tab_index])
+        set_initial_focus()
+    except Exception as e:
+        print(f"Error processing prev_puzzle: {e}")
 
-app.bind('<Return>', bind_enter)
+app.bind('<Return>', output_order)
 app.bind('[', prev_puzzle)
 app.bind(']', next_puzzle)
 app.bind('r', reset_entries)
