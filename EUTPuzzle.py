@@ -372,3 +372,4 @@ console_button.place(x=30, y=5)
 app.mainloop()
 
 # python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --include-data-files="DM.ico=DM.ico" --include-data-files="RM.ico=RM.ico" --windows-icon-from-ico=M.ico EUTPuzzle.py
+# Nuitka library to compiling line above, replace icon files to your's
