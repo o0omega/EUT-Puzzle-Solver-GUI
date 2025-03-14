@@ -4,36 +4,44 @@ import sys
 app = ctk.CTk()
 app.geometry("740x450")
 app.title("EUT Harry's Puzzle")
+app.iconbitmap("M.ico")
 
 tabview = ctk.CTkTabview(app)
 tabview.pack(pady=14, padx=20, expand=True, fill="both")
 
-info_window_instance = None
-tabs = ["Puzzle #1/#2", "Puzzle #3", "Puzzle #4"]
-entries_dict = {}
-labels_dict = {}
-
+tabs = [
+    "Puzzle #1",
+    "Puzzle #2",
+    "Puzzle #3",
+    "Puzzle #4"
+]
 custom_limits = {
-    "Puzzle #1/#2": 3,
+    "Puzzle #1": 3,
+    "Puzzle #2": 3,
     "Puzzle #3": 4,
     "Puzzle #4": 11
 }
+entries_dict = {}
+labels_dict = {}
 
-def info_window():
-    global info_window_instance
+info_window = None
+def open_info():
+    global info_window
 
-    if info_window_instance is not None and info_window_instance.winfo_exists():
-        info_window_instance.lift()
-        info_window_instance.focus_force()
+    if info_window is not None and info_window.winfo_exists():
+        info_window.lift()
+        info_window.focus_force()
         return
 
-    info_window_instance = ctk.CTkToplevel(app)
-    info_window_instance.geometry("350x300")
-    info_window_instance.title("Information")
+    info_window = ctk.CTkToplevel(app)
+    info_window.geometry("350x300")
+    info_window.title("Information")
+    
 
-    info_window_instance.after(10, lambda: info_window_instance.focus_force())
+    info_window.after(10, lambda: info_window.focus_force())
+    info_window.after(200, lambda: info_window.iconbitmap("DM.ico"))
 
-    label = ctk.CTkLabel(info_window_instance, 
+    label = ctk.CTkLabel(info_window, 
         text=("""
 Key Binds:
 "Tab" = Go to next entry window
@@ -59,7 +67,6 @@ Discord: @m6ga
 
 console_window = None
 console_text = None
-
 def open_console():
     global console_window, console_text
 
@@ -71,8 +78,10 @@ def open_console():
     console_window = ctk.CTkToplevel(app)
     console_window.geometry("500x300")
     console_window.title("Console Output")
+    console_window.iconbitmap("RM.ico")
 
     console_window.after(10, lambda: console_window.focus_force())
+    console_window.after(200, lambda: console_window.iconbitmap("RM.ico"))
 
     button_frame = ctk.CTkFrame(console_window)
     button_frame.pack(anchor="nw", padx=10, pady=5)
@@ -104,16 +113,16 @@ def pin_window(window, button):
     window.attributes('-topmost', not current_topmost)
     button.configure(text="Unpin" if not current_topmost else "Pin")
 
-def parse_entries_puzzle1_2():
+def parse_entries_puzzle1():
     try:
         tab = tabview.get()
         values = [int(entry.get()) if entry.get().isdigit() else 0 for row in entries_dict[tab] for entry in row]
-        print(f"Puzzle #1/#2 Entries:", values)
+        print(f"Puzzle #1 Entries:", values)
         
         non_zero_values = [value for value in values if value != 0]
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
         ordered_values = [order.get(num, 0) for num in values]
-        print(f"Puzzle #1/#2 Order:", ordered_values)
+        print(f"Puzzle #1 Order:", ordered_values)
 
         label_index = 0
         for i in range(5):
@@ -122,7 +131,31 @@ def parse_entries_puzzle1_2():
                 label_index += 1
 
     except Exception as e:
-        print(f"Error processing Puzzle #1/#2: {e}")
+        print(f"Error processing Puzzle #1: {e}")
+
+def parse_entries_puzzle2():
+    try:
+        tab = tabview.get()
+        values = [entry.get() if entry.get() else '0' for row in entries_dict[tab] for entry in row]
+        print(f"Puzzle #2 Entries:", values)
+
+        replace = str.maketrans("!@#$%^&*()", "1234567890")
+        values = [int(num.translate(replace)) for num in values]
+        print(f"Puzzle #2 Converted:", values)
+
+        non_zero_values = [value for value in values if value != 0]
+        order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
+        ordered_values = [order.get(num, 0) for num in values]
+        print(f"Puzzle #2 Order:", ordered_values)
+
+        label_index = 0
+        for i in range(5):
+            for j in range(5):
+                labels_dict[tab][i][j].configure(text=str(ordered_values[label_index]))
+                label_index += 1
+            
+    except Exception as e:
+        print(f"Error processing Puzzle #2: {e}")
 
 def parse_entries_puzzle3():
     try:
@@ -200,7 +233,7 @@ def parse_entries_puzzle4():
 
 
 def limit_input(entry_text, max_length, tabname):
-    valid_chars = set("0123456789-t")
+    valid_chars = set("0123456789-t!@#$%^&*()")
     return (len(entry_text) <= int(max_length) and 
             all(char in valid_chars for char in entry_text))
 
@@ -217,8 +250,10 @@ def reset_entries(event=None):
 
 def bind_enter(event=None):
     tab = tabview.get()
-    if tab == "Puzzle #1/#2":
-        parse_entries_puzzle1_2()
+    if tab == "Puzzle #1":
+        parse_entries_puzzle1()
+    elif tab == "Puzzle #2":
+        parse_entries_puzzle2()
     elif tab == "Puzzle #3":
         parse_entries_puzzle3()
     elif tab == "Puzzle #4":
@@ -278,7 +313,9 @@ for tabname in tabs:
                 height=45,
                 justify="center",
                 validate="key",
-                validatecommand=(validate_cmd, "%P", max_length)
+                validatecommand=(validate_cmd, "%P", max_length),
+                border_width=1,
+                corner_radius=2
             )
             entry.grid(row=i+1, column=j)
             row_entries.append(entry)
@@ -288,7 +325,7 @@ for tabname in tabs:
     for i in range(5):
         row_labels = []
         for j in range(5):
-            label = ctk.CTkLabel(frame2grid1, width=45, height=45, justify="center", text="0", fg_color="#037bd0", font=("", 16, "bold"))
+            label = ctk.CTkLabel(frame2grid1, width=45, height=45, justify="center", text="0", fg_color="#025c9d", font=("", 16, "bold"))
             label.grid(row=i+1, column=j)
             row_labels.append(label)
         labels.append(row_labels)
@@ -302,8 +339,10 @@ for tabname in tabs:
     outputlabel = ctk.CTkLabel(frame2grid1, width=100, text="Order", font=("", 20))
     outputlabel.grid(row=0, column=0, columnspan=5, pady=10)
 
-    if tabname == "Puzzle #1/#2":
-        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle1_2, font=("", 20))
+    if tabname == "Puzzle #1":
+        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle1, font=("", 20))
+    elif tabname == "Puzzle #2":
+        enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle2, font=("", 20))
     elif tabname == "Puzzle #3":
         enterbutton = ctk.CTkButton(frame1grid2, width=100, text="Enter", command=parse_entries_puzzle3, font=("", 20))
     else:
@@ -321,7 +360,7 @@ for tabname in tabs:
 
 app.after(10, lambda: set_initial_focus())
 
-info_button = ctk.CTkButton(app, text="?", command=info_window, width=20, height=20, font=("", 15))
+info_button = ctk.CTkButton(app, text="?", command=open_info, width=20, height=20, font=("", 15))
 info_button.place(x=5, y=5)
 
 pin_button = ctk.CTkButton(app, text="Pin", command=lambda: pin_window(app, pin_button), width=40, height=20, font=("", 15))
@@ -332,4 +371,4 @@ console_button.place(x=30, y=5)
 
 app.mainloop()
 
-# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable EUTPuzzle.py
+# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --include-data-files="DM.ico=DM.ico" --include-data-files="RM.ico=RM.ico" --windows-icon-from-ico=M.ico EUTPuzzle.py
