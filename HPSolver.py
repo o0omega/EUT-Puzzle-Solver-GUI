@@ -6,7 +6,7 @@ from ctypes import windll
 app = ctk.CTk()
 app.geometry("498x450")
 app.title("HPSolver")
-app.iconbitmap("M.ico")
+app.iconbitmap(r'C:\Users\ozo\Documents\vs code stuff\eut lol\GUI Puzzle\M.ico')
 
 tabview = ctk.CTkTabview(app)
 tabview.pack(pady=14, padx=20, expand=True, fill="both")
@@ -86,6 +86,9 @@ def open_info():
                               command=info_window.destroy)
         close.pack(side='right', padx=2)
 
+        pin = ctk.CTkButton(titlebar, height=20, width=15, corner_radius=5, fg_color='#002037', text='Pin', font=("", 10), command=lambda: pin_window(info_window, pin))
+        pin.pack(side='left', padx=2)
+
         labelinfo = ctk.CTkLabel(mainframe, 
             text='Version 1.3', 
             font=("", 20, 'bold'),
@@ -110,7 +113,7 @@ for keybinds to work properly)
             
 Puzzle #4 entries take all 3 RGB values of one color
 separated by either "t" or "-" (both can be used)
-Puzzle #2 can be used for Puzzle #1/#2 as well
+Puzzle #1/#2 works universally for ingame ones
 
 Made by ozomega
 Discord: @m6ga
@@ -507,8 +510,8 @@ console_button.place(x=30, y=403)
 order = ctk.CTkButton(app, text="Order", width=20, height=20, font=("",15), bg_color='#2b2b2b', command=open_order)
 order.place(x=416, y=403)
 
-
 app.mainloop()
 
-# python -m nuitka --enable-plugin=tk-inter --standalone --onefile --windows-console-mode=disable --include-data-files="M.ico=M.ico" --windows-icon-from-ico=M.ico HPSolver.py
-# Nuitka library required to use compiling line above, put ico files in the same repository as the script (the files are present on github).
+# for .exe compiling use following 2 commands, make sure to replace M.ico path in the line "app.iconbitmap(r'C:\Users\ozo\Documents\vs code stuff\eut lol\GUI Puzzle\M.ico')" to yours, it must be full path as it wont work otherwise.
+# pip install pyinstaller
+# pyinstaller --onefile --icon=M.ico --add-data="M.ico;." --clean --noconsole HPSolver.py
