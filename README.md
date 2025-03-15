@@ -1,4 +1,5 @@
 Made for the great game of https://www.roblox.com/games/122809141833750/v0-4-1-Everything-Upgrade-Tree
+Works correctly only with Windows. Check information window inside the app for keybinds and stuff.
 
 ## Puzzle explanations 
 - Puzzle #1:
