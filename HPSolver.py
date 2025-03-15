@@ -526,3 +526,5 @@ app.mainloop()
 # for .exe compiling use following 2 commands, make sure to replace M.ico path in the line "app.iconbitmap(r'C:\Users\ozo\Documents\vs code stuff\eut lol\GUI Puzzle\M.ico')" to yours, it must be full path as it wont work otherwise.
 # pip install pyinstaller
 # pyinstaller --onefile --icon=M.ico --add-data="M.ico;." --clean --noconsole HPSolver.py
+
+

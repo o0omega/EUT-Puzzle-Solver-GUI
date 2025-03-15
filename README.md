@@ -1,1 +1,1 @@
-.exe file is located in "dist"
+Made for the great game of https://www.roblox.com/games/122809141833750/v0-4-1-Everything-Upgrade-Tree
