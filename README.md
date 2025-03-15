@@ -13,5 +13,5 @@ Range is increased to 1000 and the goal is to find number of 1s for each number 
 then go from lowest counts to highest.
 
 Puzzle #4:
-We are greated with 25 colors for which we are provided their RGB values. The goal is to convert RGB
+We are greeted with 25 colors for which we are provided their RGB values. The goal is to convert RGB
 values to HSV and find the sum of H+S+V and go from lowest sum to highest.
