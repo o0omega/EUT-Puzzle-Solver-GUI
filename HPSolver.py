@@ -789,6 +789,6 @@ open_order()
 print("HPSolver Started")
 app.mainloop()
 
-# for .exe compiling use following 2 commands, make sure to replace all path to the correct ones "app.iconbitmap(r'C:\Users\ozo\Documents\vs code stuff\eut lol\GUI Puzzle\M.ico')" to yours, it must be full path as it wont work otherwise.
+# for .exe compiling use 2 following commands, make sure all file paths are correct.
 # pip install pyinstaller
 # pyinstaller --onefile --noconsole --icon="images/M.ico" --add-data="images/*;images" --add-data="images/M.ico;." --add-data="images/settings.png;." --add-data="images/freedomdive.png;." --clean HPSolver.py
