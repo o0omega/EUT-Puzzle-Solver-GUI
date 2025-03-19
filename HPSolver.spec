@@ -5,7 +5,7 @@ a = Analysis(
     ['HPSolver.py'],
     pathex=[],
     binaries=[],
-    datas=[('M.ico', '.')],
+    datas=[('images/*', 'images'), ('images/M.ico', '.'), ('images/settings.png', '.'), ('images/freedomdive.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['M.ico'],
+    icon=['images\\M.ico'],
 )
