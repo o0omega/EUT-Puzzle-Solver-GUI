@@ -119,3 +119,319 @@ Entries: ['0', '0', '1245', '0', '0', '0', '0', '0', '1111', '0', '0', '0', '0',
 Detected Puzzle #3
 Binary 1s Counts: [0, 0, 7, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 1, 0, 0]
 Order: [0, 0, 4, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0]
+Console initialized
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '123-123-123', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #4
+Sanitized: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '123 123 123', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+HSV Values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 48.23529411764706, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Keybind changed to: <r> R
+Keybind changed to: <t> T
+Keybind changed to: <w> W
+Keybind changed to: <d> D
+Keybind changed to: <a> A
+Keybind changed to: Shift Shift
+Keybind changed to: <z> Z
+Keybind changed to: <x> X
+Keybind changed to: <z> Z
+Keybind changed to: <b> B
+Keybind changed to: <n> N
+Keybind changed to: <,> ,
+Keybind changed to: <.> .
+Keybind changed to: <k> K
+Keybind changed to: <j> J
+Keybind changed to: <h> H
+Keybind changed to: <y> Y
+Keybind changed to: <u> U
+Keybind changed to: <i> I
+Keybind changed to: <o> O
+Keybind changed to: <i> I
+Keybind changed to: <y> Y
+Keybind changed to: <t> T
+Keybind changed to: <r> R
+Keybind changed to: <f> F
+Keybind changed to: <g> G
+Keybind changed to: F2 F2
+Keybind changed to: F2 F2
+Keybind changed to: F1 F1
+Keybind changed to: F3 F3
+Keybind changed to: F4 F4
+Console initialized
+Keybind changed to: F2 F2
+Keybind changed to: F3 F3
+Keybind changed to: F4 F4
+Keybind changed to: F1 F1
+Keybind changed to: <g> G
+Keybind changed to: <h> H
+Keybind changed to: <y> Y
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Keybind changed to: <r> R
+Keybind changed to: <t> T
+Keybind changed to: <y> Y
+Keybind changed to: <t> T
+Keybind changed to: <r> R
+Keybind changed to: <e> E
+Keybind changed to: <d> D
+Keybind changed to: <q> Q
+Keybind changed to: <a> A
+Keybind changed to: <s> S
+Keybind changed to: <d> D
+Keybind changed to: Shift Shift
+Keybind changed to: <f> F
+Keybind changed to: <d> D
+Keybind changed to: <f> F
+Keybind changed to: <g> G
+Keybind changed to: <h> H
+Keybind changed to: <f> F
+Keybind changed to: <f> F
+Keybind changed to: <t> T
+Console initialized
+Keybind changed to: <t> T
+Keybind changed to: <g> G
+Keybind changed to: <d> D
+Keybind changed to: <w> W
+Keybind changed to: <q> Q
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Keybind changed to: <r> R
+Keybind changed to: <e> E
+Keybind changed to: <q> Q
+Keybind changed to: <w> W
+Keybind changed to: <s> S
+Keybind changed to: <d> D
+Keybind changed to: <a> A
+Keybind changed to: <z> Z
+Console initialized
+Keybind changed to: <r> R
+Keybind changed to: <e> E
+Keybind changed to: <c> C
+Keybind changed to: <v> V
+Keybind changed to: <w> W
+Keybind changed to: <q> Q
+Keybind changed to: <a> A
+Keybind changed to: <s> S
+Keybind changed to: <z> Z
+Keybind changed to: <s> S
+Keybind changed to: <d> D
+Keybind changed to: <w> W
+Keybind changed to: <q> Q
+Keybind changed to: <e> E
+Keybind changed to: <r> R
+Keybind changed to: <t> T
+Keybind changed to: <q> Q
+Keybind changed to: <`> `
+Keybind changed to: <p> P
+Keybind changed to: <[> [
+Keybind changed to: <]> ]
+Keybind changed to: <[> [
+Keybind changed to: <'> '
+Keybind changed to: <;> ;
+Keybind changed to: <l> L
+Keybind changed to: <k> K
+Keybind changed to: <j> J
+Keybind changed to: <h> H
+Keybind changed to: <g> G
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Error processing toggle_clickthrough: name 'force_focus_window' is not defined
+Console initialized
+Console initialized
+Console initialized
+Console initialized
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24Clickthrough enabled. New style: 0x24
+
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Clickthrough disabled. New style: 0x4
+Clickthrough enabled. New style: 0x24
+Console initialized
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+HWND from GetForegroundWindow(): 3803844
+Clickthrough enabled. New style: 0x80020
+HWND from GetForegroundWindow(): 3803844
+Clickthrough disabled. New style: 0x80000
+Console initialized
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Order window is not open. Open the Order window to enable clickthrough.
+Console initialized.
+Clickthrough enabled. New style: 0x80020
+Clickthrough disabled. New style: 0x80000
+Clickthrough enabled. New style: 0x80020
+Clickthrough disabled. New style: 0x80000
+Clickthrough enabled. New style: 0x80020
+Clickthrough disabled. New style: 0x80000
+Console initialized.
+Entries: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+Detected Puzzle #1/#2
+Converted: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Order: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+Console initialized.
+Order window is not open. Open the Order window to enable clickthrough.
+Keybind changed to: F1 F1
+Invalid keybind: Esc
+Invalid keybind: Esc
+Invalid keybind: Esc
+Invalid keybind: Esc

@@ -1,15 +1,18 @@
-Version = "1.4"
+Version = "1.4a"
 InfoText = """
 Any app window must be in focus for keybinds
 to function properly.
 
+For Puzzle #2 you can input numbers right away.
 Puzzle #4 entries take all 3 RGB values of a cell
 with them separated by any character, besides
 numbers themselves, their 'shifted' counterparts
 and keybind-assigned characters.
 
-Made by ozomega
+Made by ozo
 Discord: @m6ga
+DM any bugs or suggestions, a forum post for the
+app can be found on EUT discord (.gg/eut).
 """
 
 import customtkinter as ctk
@@ -25,6 +28,8 @@ def resource_path(relative_path):
 
 icon_path = resource_path(r"images\M.ico")
 
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
 app = ctk.CTk()
 app.geometry("463x385")
 app.title("HPSolver")
@@ -87,6 +92,11 @@ def titlebarify(widget, window, darkening=False):
     widget.bind("<ButtonPress-1>", start_move)
     widget.bind("<ButtonRelease-1>", stop_move)
 
+def switch_to_english():
+    user32 = windll.user32
+    LANG_EN = 0x0409
+    user32.ActivateKeyboardLayout(LANG_EN, 0)
+
 settings_window = None
 def open_settings():
     try:
@@ -98,7 +108,9 @@ def open_settings():
 
             def on_key_press(event):
                 new_key = " ".join([w.capitalize() for w in event.name.split()])
-                if new_key not in blacklist:
+                if not event.name.isascii():
+                    print("Invalid keybind: Non-ASCII key detected, make sure you are using an English keyboard layout.")
+                elif new_key not in blacklist:
                     button.configure(text=new_key, fg_color='#1f6aa5')
                     app.unbind_all(keybinds[function])
                     keybinds[function] = new_key if len(new_key) > 1 else "<" + new_key.lower() + ">"
@@ -109,6 +121,7 @@ def open_settings():
                     print("Invalid keybind:", new_key)
                 keyboard.unhook_all()
 
+            switch_to_english()
             keyboard.on_press(on_key_press)
 
         if settings_window is not None and settings_window.winfo_exists():
@@ -118,9 +131,9 @@ def open_settings():
 
         settings_window = ctk.CTkToplevel(app)
         window = settings_window
-        window.geometry("200x200")
+        window.geometry("220x220")
         window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#242424")
+        window.wm_attributes("-transparentcolor", "#1a1a1a")
         window.after(10, lambda: window.focus_force())
 
         mainframe = ctk.CTkFrame(window,
@@ -132,7 +145,7 @@ def open_settings():
                                 fg_color='#1f6aa5',
                                 corner_radius=5)
         titlebar.pack_propagate(False)
-        titlebar.pack(pady=(5, 0), padx=5)
+        titlebar.pack(fill='x', pady=(5, 0), padx=5)
         titlebarify(titlebar, window, True)
 
         close = ctk.CTkButton(titlebar,
@@ -182,7 +195,7 @@ def open_settings():
                                 border_width=1,
                                 corner_radius=2,
                                 text="Enter",
-                                font=("", 15),
+                                font=("", 15, 'bold'),
                                 command=lambda: hatch_bind(SolveBind, hatch_puzzle))
         SolveBind.grid(row=0, column=1, pady=5, padx=5)
 
@@ -192,7 +205,7 @@ def open_settings():
                                 border_width=1,
                                 corner_radius=2,
                                 text="R",
-                                font=("", 15),
+                                font=("", 15, 'bold'),
                                 command=lambda: hatch_bind(ClearBind, clear_entries))
         ClearBind.grid(row=1, column=1, pady=5, padx=5)
 
@@ -202,7 +215,7 @@ def open_settings():
                                         border_width=1,
                                         corner_radius=2,
                                         text="F1",
-                                        font=("", 15),
+                                        font=("", 15, 'bold'),
                                         command=lambda: hatch_bind(ClickthroughBind, toggle_clickthrough))
         ClickthroughBind.grid(row=2, column=1, pady=5, padx=5)
 
@@ -224,7 +237,7 @@ def open_info():
         info_window = window
         window.geometry("350x400")
         window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#242424")
+        window.wm_attributes("-transparentcolor", "#1a1a1a")
         window.after(10, lambda: window.focus_force())
 
         mainframe = ctk.CTkFrame(window,
@@ -289,7 +302,7 @@ class ConsoleWindow:
     def setup(self):
         self.setup_ui()
         self.setup_redirection()
-        self.write_console("Console initialized\n")
+        self.write_console("Console initialized.\n")
 
     def setup_ui(self):
         try:
@@ -301,7 +314,7 @@ class ConsoleWindow:
             self.window = ctk.CTkToplevel(self.master)
             self.window.geometry("550x300")
             self.window.overrideredirect(True)
-            self.window.wm_attributes("-transparentcolor", "#242424")
+            self.window.wm_attributes("-transparentcolor", "#1a1a1a")
             self.window.after(10, lambda: self.window.focus_force())
 
             mainframe = ctk.CTkFrame(self.window,
@@ -365,7 +378,7 @@ class ConsoleWindow:
                                                state='normal',
                                                font=("Calibri", 12, "bold"))
             pws.set_opacity(self.console_text, 0.9)
-            self.console_text.pack(pady=(0,10), padx=10, fill="both", expand=True)
+            self.console_text.pack(pady=(0,10), padx=10, expand=True)
             self.console_text.configure(state='disabled')
 
             self.window.withdraw()
@@ -435,23 +448,46 @@ def change_transparency(value):
 clickthrough = False
 clickthroughlabel = None
 def toggle_clickthrough(event=None):
+    global clickthrough, clickthroughlabel
     try:
-        global clickthrough, clickthroughlabel 
+        if order_window is None or not order_window.winfo_exists() or order_window.state() == 'withdrawn':
+            print("Order window is not open. Open the Order window to enable clickthrough.")
+            return
+
+        order_window.lift()
+        order_window.focus_force()
+        order_window.update_idletasks()
+
         hwnd = windll.user32.GetForegroundWindow()
         style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
 
-        if clickthrough:
-            windll.user32.SetWindowLongW(hwnd, -20, style | 0x00000020)  # WS_EX_TRANSPARENT
+        if not clickthrough:
+            new_style = style | 0x00000020  # WS_EX_TRANSPARENT
+            windll.user32.SetWindowLongW(hwnd, -20, new_style)
             if clickthroughlabel:
                 clickthroughlabel.configure(text="Clickthrough enabled", text_color='#c4ffa8')
         else:
-            windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # WS_EX_TRANSPARENT removed
+            new_style = style & ~0x00000020  # Remove WS_EX_TRANSPARENT
+            windll.user32.SetWindowLongW(hwnd, -20, new_style)
             if clickthroughlabel:
                 clickthroughlabel.configure(text="Clickthrough disabled", text_color='#ffa8a8')
+            force_focus_window(hwnd)
 
+        windll.user32.UpdateWindow(hwnd)
         clickthrough = not clickthrough
+
     except Exception as e:
         print(f"Error processing toggle_clickthrough: {e}")
+
+def force_focus_window(hwnd): # ctk focus_force doesn't work after disabling clickthrough for whatever reason
+    try:
+        if windll.user32.IsIconic(hwnd):
+            windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+        windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0003)  # HWND_TOPMOST
+        windll.user32.SetForegroundWindow(hwnd)
+        windll.user32.SetWindowPos(hwnd, -2, 0, 0, 0, 0, 0x0003)  # HWND_NOTOPMOST
+    except Exception as e:
+        print(f"Error processing force_focus_window: {e}")
 
 order_window = None
 def open_order():
@@ -467,7 +503,7 @@ def open_order():
         order_window = window
         window.geometry("262x340")
         window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#242424")
+        window.wm_attributes("-transparentcolor", "#1a1a1a")
         window.after(10, lambda: window.focus_force())
 
         mainframe = ctk.CTkFrame(window,
@@ -593,7 +629,7 @@ def puzzle1_2(values):
         non_zero_values = [value for value in values if value != 0]
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
         ordered_values = [order.get(num, 0) for num in values]
-        print(f"Order: {ordered_values}")
+        print(f"Order: {ordered_values}\n")
 
         if order_window is not None and order_window.winfo_exists():
             label_index = 0
@@ -684,10 +720,10 @@ def clear_entries(event=None):
     except Exception as e:
         print(f"Error processing clear_entries: {e}")
 
-frame = ctk.CTkFrame(app, bg_color='#242424')
+frame = ctk.CTkFrame(app, bg_color='#1a1a1a')
 frame.pack(pady=(32, 10))
 
-grid1 = ctk.CTkFrame(frame, bg_color='#242424')
+grid1 = ctk.CTkFrame(frame, bg_color='#1a1a1a')
 grid2 = ctk.CTkFrame(frame, fg_color='transparent')
 grid1.pack(side="top")
 grid2.pack(side="bottom", pady=5)
