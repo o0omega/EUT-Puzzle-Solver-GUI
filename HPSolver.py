@@ -30,8 +30,10 @@ icon_path = resource_path(r"images\M.ico")
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
+
 app = ctk.CTk()
 app.geometry("463x385")
+app.resizable(False, False)
 app.title("HPSolver")
 app.iconbitmap(resource_path(r"images\M.ico"))
 
@@ -707,8 +709,7 @@ def puzzle4(values):
 
 def limit_input(entry_text, max_length):
     try:
-        valid_chars = set("0123456789-t!@#$%^&*()")
-        return (len(entry_text) <= int(max_length) and all(char in valid_chars for char in entry_text))
+        return (len(entry_text) <= int(max_length))
     except Exception as e:
         print(f"Error processing limit_input: {e}")
 
