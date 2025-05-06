@@ -18,3 +18,5 @@ We are greeted with 25 colors for which we are provided their RGB values. The go
 values to HSV and find the sum of H+S+V and go from lowest sum to highest.
 
 Version 1.3 usage showcase - https://youtu.be/IKNJm75xSh4
+![image](https://github.com/user-attachments/assets/6edba1ee-69ca-4e1f-b467-9ab8b7044b20)
+Thanks to ASAP for the funny thumbnail
