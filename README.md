@@ -22,4 +22,4 @@ Version 1.3 usage showcase - https://youtu.be/IKNJm75xSh4
 
 ![image](https://github.com/user-attachments/assets/6edba1ee-69ca-4e1f-b467-9ab8b7044b20)
 
-Thanks to Harry for the funny thumbnail
+Thanks to the great ASAP for the funny thumbnail!
