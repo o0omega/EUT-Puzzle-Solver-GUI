@@ -11,14 +11,21 @@ Same as Puzzle #1, but numbers are masked behind their shifted counterparts on d
 !=1, @=2, #=3, $=4, %=5, ^=6, &=7, *=8, (=9, )=0.
 
 - Puzzle #3:
-Values range is increased to 2500 and the goal is to find number of 1s (ones) for each number in their binary form (base 2) and go from lowest counts to highest.
+A table of 25 random numbers need to be translated from the base in () to base10 then pressed on from lowest to highest.
 
 - Puzzle #4:
-We are greeted with 25 colors for which we are provided their RGB values. The goal is to convert RGB
-values to HSV and find the sum of H+S+V and go from lowest sum to highest.
+We are greeted with 25 "?" signs, hovering above which reveals a formula or an evil question that needs to be solved.
+Upon solving each of them you have to press on the answers from lowest to highest
+(Thankfully, if you do a mistake a solved equation won't become unsolved).
 
-Version 1.3 usage showcase - https://youtu.be/IKNJm75xSh4
+Version 1.3 usage showcase - https://youtu.be/IKNJm75xSh4 (is not accurate to the Harry's Puzzle as of v0.6).
 
 ![image](https://github.com/user-attachments/assets/6edba1ee-69ca-4e1f-b467-9ab8b7044b20)
 
 Thumbnail by ASAP ☃️
+
+- Old Puzzle #3:
+Values range is increased to 2500 and the goal is to find number of 1s (ones) for each number in their binary form (base 2) and go from lowest counts to highest.
+- Old Puzzle #4:
+We are greeted with 25 colors for which we are provided their RGB values. The goal is to convert RGB
+values to HSV and find the sum of H+S+V and go from lowest sum to highest.
