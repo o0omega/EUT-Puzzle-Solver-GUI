@@ -29,3 +29,5 @@ Values range is increased to 2500 and the goal is to find number of 1s (ones) fo
 - Old Puzzle #4:
 We are greeted with 25 colors for which we are provided their RGB values. The goal is to convert RGB
 values to HSV and find the sum of H+S+V and go from lowest sum to highest.
+
+Version 1.3 usage showcase - https://youtu.be/IKNJm75xSh4
