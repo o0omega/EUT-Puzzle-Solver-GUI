@@ -1,7 +1,7 @@
-Version = "1.5a"
+Version = "1.6"
 InfoText = """\
 Any app's window must be in focus 
-for keybinds to function.
+for settings to function.
 
 For Puzzle #2 you can input numbers right away.
 For Puzzle #3 you can seperate the number and
@@ -15,9 +15,8 @@ answers right away.
 Made by ozo (Discord @m6ga)
 Contributed by ltrc125 (@cat.0400)
 DM any bugs or suggestions, a forum post for the
-app can be found on EUT discord (.gg/eut).
+app can be found on EUT discord.\
 """
-
 Evil_Solutions = """\
 "Asap" question's answer is 1
 "33 + 77" is 100
@@ -29,14 +28,15 @@ Answers can be input right away, but solving is
 also implemented
 
 Puzzle #4 syntax shortcuts
-ce = math.ceil
-s = math.ceil
+c = math.ceil
 f = math.floor
 r = math.round
-pi = π
+p = π (or just 3.14)
 """
 
+
 import customtkinter as ctk
+import tkinter as tk
 import sys, os
 from ctypes import windll
 from PIL import Image
@@ -45,6 +45,7 @@ import math
 import sympy as sp
 from re import sub
 import json
+import webbrowser
 
 
 # required for proper images compiling
@@ -52,7 +53,6 @@ def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
-
 
 # top window pinning utility
 def pin_window(window, button):
@@ -62,7 +62,6 @@ def pin_window(window, button):
         button.configure(text="Unpin" if not current_topmost else "Pin")
     except Exception as e:
         print(f"Error processing pin_window: {e}")
-
 
 # allows for darkening any colour, mainly applied to widgets upon hovering as feedback
 def darken(widget, factor=0.8, bool=True):
@@ -80,20 +79,17 @@ def darken(widget, factor=0.8, bool=True):
 
     widget.bind("<Enter>", on_enter)
     widget.bind("<Leave>", on_leave)
-    return darken_color, initial_color
-
+    return darken_color
 
 # custom titlebar for subwindows
 def titlebarify(widget, window, darkening=False):
-    if darkening:
-        darken_color, initial_color = darken(widget)
+    initial_color = widget.cget("fg_color")
+    darken_color = darken(widget)
 
     def start_move(event):
         window._offset_x = event.x_root - window.winfo_rootx()
         window._offset_y = event.y_root - window.winfo_rooty()
-        if darkening:
-            widget.configure(fg_color=f"#{darken_color}")
-        window.bind("<Motion>", drag_motion)
+        widget.configure(fg_color=f"#{darken_color}")
 
     def do_move(event):
         new_x = event.x_root - window._offset_x
@@ -101,24 +97,239 @@ def titlebarify(widget, window, darkening=False):
         window.geometry(f"+{new_x}+{new_y}")
 
     def stop_move(event):
-        if darkening:
-            widget.configure(fg_color=f"#{initial_color}")
-        window.unbind("<Motion>")
+        widget.configure(fg_color=initial_color)
 
-    def drag_motion(event):
-        if darkening:
-            widget.configure(fg_color=f"#{darken_color}")
-        do_move(event)
-
-    widget.bind("<ButtonPress-1>", start_move)
+    widget.bind("<Button-1>", start_move)
+    widget.bind("<B1-Motion>", do_move)
     widget.bind("<ButtonRelease-1>", stop_move)
 
+# Save config to a JSON file
+def save_settings():
+    try:
+        data = {
+            "solve": settings[hatch_puzzle],
+            "clear": settings[clear_entries],
+            "playback": settings[order_playback],
+            "cooldown": int(settings[order_cooldown]),
+        }
+        with open("settings.json", "w") as f:
+            json.dump(data, f)
+        print("Config saved.")
+    except Exception as e:
+        print(f"Error saving config: {e}")
 
-def switch_to_english():
-    user32 = windll.user32
-    LANG_EN = 0x0409
-    user32.ActivateKeyboardLayout(LANG_EN, 0)
+def load_settings():
+    if not os.path.exists("settings.json"):
+        return
+    try:
+        with open("settings.json", "r") as f:
+            data = json.load(f)
+        
+        # Solve
+        old_solve = settings[hatch_puzzle]
+        new_solve = data.get("solve", old_solve)
+        if new_solve != old_solve and new_solve != '??':
+            app.unbind_all(old_solve)
+            settings[hatch_puzzle] = new_solve
+            app.bind_all(f"<{new_solve}>", hatch_puzzle)
+        
+        # Clear
+        old_clear = settings[clear_entries]
+        new_clear = data.get("clear", old_clear)
+        if new_clear != old_clear and new_solve != '??':
+            app.unbind_all(old_clear)
+            settings[clear_entries] = new_clear
+            app.bind_all(f"<{new_clear}>", clear_entries)
+        
+        # Order playback
+        old_playback = settings[order_playback]
+        new_playback = data.get("playback", old_playback)
+        if new_playback != old_playback and new_solve != '??':
+            app.unbind_all(old_playback)
+            settings[order_playback] = new_playback
+            app.bind_all(f"<{new_playback}>", order_playback)
 
+        # Order cooldown
+        old_cooldown = settings[order_cooldown]
+        new_cooldown = data.get("cooldown", old_cooldown)
+        if new_cooldown != old_cooldown:
+            settings[order_cooldown] = int(new_cooldown)
+    
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+
+def create_subwindow(geometry=""):
+    window = ctk.CTkToplevel(app)
+    window.attributes("-toolwindow", True)
+    window.attributes('-topmost', True)
+    window.overrideredirect(True)
+    window.wm_attributes("-transparentcolor", "#1a1a1a")
+    window.after(10, lambda: window.focus_force())
+    if geometry:
+        window.geometry(geometry)
+
+    mainframe = ctk.CTkFrame(window, corner_radius=10)
+    mainframe.pack()
+
+    titlebar = ctk.CTkFrame(mainframe,
+                            height=25,
+                            fg_color='#1f6aa5',
+                            corner_radius=5)
+    titlebar.pack_propagate(False)
+    titlebar.pack(fill='x', pady=(5, 0), padx=5)
+    titlebarify(titlebar, window, True)
+
+    close = ctk.CTkButton(titlebar,
+                          height=20,
+                          width=15,
+                          corner_radius=5,
+                          fg_color='#002037',
+                          text='Close',
+                          font=("", 10),
+                          command=window.withdraw)
+    close.pack(side='right', padx=2)
+
+    return window, mainframe, titlebar
+
+settings_window = None
+def open_settings():
+    try:
+        global settings_window, settings
+
+        def hatch_bind(button, function):
+            blacklist = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '!', '@', '#', '$', '%', '^', '&', '*', '(',
+                        ')', '-', '+', '.', ',', '/', 'm', 'a', 't', 'h', 'r', 'o', 'u', 'n', 'd', 'c', 'e', 'i', 'l', 'f', 's', 'p', "Tab", "Escape"]
+            button.configure(text="Press a Key", fg_color='#144870')
+
+            def on_key_press(event):
+                if not event.keysym.isascii():
+                    print("Invalid keybind: Non-ASCII key detected.")
+                    return
+
+                key = event.keysym
+                # Normalizing
+                key = key.upper() if key.lower() in [f'f{i}' for i in range(1, 13)] else key
+                if key in blacklist:
+                    print(f"Invalid keybind: {key}.\nFollowing keys are reserved:\n{blacklist}.")
+                    return
+
+                button.configure(text=key, fg_color='#1f6aa5')
+                
+                old_key = settings.get(function)
+                if old_key:
+                    try:
+                        app.unbind_all(f"<{old_key}>")
+                        app.unbind_all(f"<Key-{old_key}>")  # Try alternative form
+                        app.unbind_all(old_key)  # Try raw keysym
+                    except Exception as e:
+                        print(f"Error unbinding old key {old_key}: {e}")
+                
+                # Update settings and bind new key
+                settings[function] = key
+                app.bind_all(f"<{key}>", function)
+                print(f"{function.__name__} keybind changed to:", key)
+
+                settings_window.unbind("<Any-KeyPress>")
+
+            settings_window.bind("<Any-KeyPress>", on_key_press)
+            settings_window.focus_force()
+
+        def update_cooldown(event):
+            try:
+                new_value = event.widget.get().strip()
+                if new_value.isdigit() and int(new_value) > 0:
+                    settings[order_cooldown] = int(new_value)
+                    print(f"Cooldown updated to: {settings[order_cooldown]}ms")
+                    save_settings()
+                else:
+                    print("Invalid cooldown: Must be a positive integer.")
+                    event.widget.delete(0, "end")
+                    event.widget.insert(0, str(settings[order_cooldown]))
+            except Exception as e:
+                print(f"Error updating cooldown: {e}")
+                event.widget.delete(0, "end")
+                event.widget.insert(0, str(settings[order_cooldown]))
+
+        if settings_window is not None and settings_window.winfo_exists():
+            settings_window.lift()
+            settings_window.focus_force()
+            return
+
+        window, mainframe, titlebar = create_subwindow(geometry=f"+{screen_w - 225}+{screen_h//7}")
+
+        grid = ctk.CTkFrame(mainframe, corner_radius=5)
+        grid.pack(pady=5, padx=5)
+        grid.columnconfigure(1, weight=1)
+        SettingsLabel = ctk.CTkLabel(grid,
+                                     text="Settings",
+                                     font=("", 20, "bold"))
+        SettingsLabel.grid(row=0, columnspan=2)
+        Solve = ctk.CTkLabel(grid,
+                             text="Solve:",
+                             font=("", 15))
+        Solve.grid(row=1, column=0, pady=5, padx=5, sticky="w")
+        SolveBind = ctk.CTkButton(grid,
+                                  width=90,
+                                  height=30,
+                                  border_width=1,
+                                  corner_radius=2,
+                                  text=settings[hatch_puzzle],
+                                  font=("", 15, 'bold'), command=lambda: hatch_bind(SolveBind, hatch_puzzle))
+        SolveBind.grid(row=1, column=1, pady=5, padx=5)
+
+        Clear = ctk.CTkLabel(grid,
+                             text="Clear:",
+                             font=("", 15))
+        Clear.grid(row=2, column=0, pady=5, padx=5, sticky="w")
+        ClearBind = ctk.CTkButton(grid,
+                                  width=90,
+                                  height=30,
+                                  border_width=1,
+                                  corner_radius=2,
+                                  text=settings[clear_entries],
+                                  font=("", 15, 'bold'),
+                                  command=lambda: hatch_bind(ClearBind, clear_entries))
+        ClearBind.grid(row=2, column=1, pady=5, padx=5)
+
+        Playback = ctk.CTkLabel(grid,
+                                text="Order Playback:",
+                                font=("", 15))
+        Playback.grid(row=3, column=0, pady=5, padx=5, sticky="w")
+        PlaybackBind = ctk.CTkButton(grid,
+                                     width=90,
+                                     height=30,
+                                     border_width=1,
+                                     corner_radius=2,
+                                     text=settings[order_playback],
+                                     font=("", 15, 'bold'),
+                                     command=lambda: hatch_bind(PlaybackBind, order_playback))
+        PlaybackBind.grid(row=3, column=1, pady=5, padx=5)
+
+        Cooldown = ctk.CTkLabel(grid,
+                                text="Cooldown (ms):",
+                                font=("", 15))
+        Cooldown.grid(row=4, column=0, pady=5, padx=5, sticky="w")
+        CooldownValue = ctk.CTkEntry(grid,
+                                     justify="center",
+                                     width=90,
+                                     height=30,
+                                     border_width=1,
+                                     corner_radius=2,
+                                     font=("", 15, 'bold'))
+        CooldownValue.insert(0, str(settings[order_cooldown]))
+        CooldownValue.grid(row=4, column=1, pady=5, padx=5)
+        CooldownValue.bind("<FocusOut>", update_cooldown)
+
+        TabLabel = ctk.CTkLabel(grid,
+                                text="Focus Next Entry = Tab\nPrevious Entry = Shift+Tab",
+                                font=("", 15))
+        TabLabel.grid(row=5, column=0, columnspan=2, pady=5)
+
+        window.withdraw()
+        settings_window = window
+
+    except Exception as e:
+        print(f"Error processing open_settings: {e}\n")
 
 info_window = None
 def open_info():
@@ -129,45 +340,7 @@ def open_info():
             info_window.focus_force()
             return
 
-        window = ctk.CTkToplevel(app)
-        info_window = window
-        window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#1a1a1a")
-        window.after(10, lambda: window.focus_force())
-
-        mainframe = ctk.CTkFrame(window,
-                                 width=350,
-                                 height=400,
-                                 corner_radius=10)
-        mainframe.pack(fill='both')
-
-        titlebar = ctk.CTkFrame(mainframe,
-                                height=25,
-                                fg_color='#1f6aa5',
-                                corner_radius=5)
-        titlebar.pack_propagate(False)
-        titlebar.pack(fill='x', pady=(5, 0), padx=5)
-        titlebarify(titlebar, window, True)
-
-        close = ctk.CTkButton(titlebar,
-                              height=20,
-                              width=15,
-                              corner_radius=5,
-                              fg_color='#002037',
-                              text='Close',
-                              font=("", 10),
-                              command=window.withdraw)
-        close.pack(side='right', padx=2)
-
-        pin = ctk.CTkButton(titlebar,
-                            height=20,
-                            width=15,
-                            corner_radius=5,
-                            fg_color='#002037',
-                            text='Pin',
-                            font=("", 10),
-                            command=lambda: pin_window(window, pin))
-        pin.pack(side='left', padx=2)
+        window, mainframe, titlebar = create_subwindow("+0+0")
 
         versionlabel = ctk.CTkLabel(mainframe,
                                     anchor="center",
@@ -179,14 +352,24 @@ def open_info():
         label = ctk.CTkLabel(mainframe,
                              text=InfoText,
                              font=("", 15),
-                             justify="left",
-                             width=280)
-        label.pack(padx=5, pady=(0, 2))
+                             justify="left")
+        label.pack(padx=5)
+        DiscordLabel = ctk.CTkLabel(mainframe,
+                             text="Everything Upgrade Tree Discord",
+                             font=("", 18, "bold"),
+                             anchor="center",
+                             text_color="#48a7ff",
+                             cursor="hand2")
+        DiscordLabel.pack(padx=5, pady=(0, 2))
+        DiscordLabel.bind("<Enter>", lambda e: DiscordLabel.configure(font=("", 18, "underline")))
+        DiscordLabel.bind("<Leave>", lambda e: DiscordLabel.configure(font=("", 18, "bold")))
+        DiscordLabel.bind("<Button-1>", lambda e: (webbrowser.open("https://discord.gg/eut"), app.iconify()))
+
         window.withdraw()
+        info_window = window
 
     except Exception as e:
         print(f"Error processing open_info: {e}\n")
-
 
 evil_solutions_windows = None
 def open_evil_solutions():
@@ -197,51 +380,13 @@ def open_evil_solutions():
             evil_solutions_windows.focus_force()
             return
 
-        evil_solutions_windows = ctk.CTkToplevel(app)
-        window = evil_solutions_windows
-        window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#1a1a1a")
-        window.after(10, lambda: window.focus_force())
-
-        mainframe = ctk.CTkFrame(window,
-                                 width=350,
-                                 height=400,
-                                 corner_radius=10)
-        mainframe.pack(fill='both')
-
-        titlebar = ctk.CTkFrame(mainframe,
-                                height=25,
-                                fg_color='#1f6aa5',
-                                corner_radius=5)
-        titlebar.pack_propagate(False)
-        titlebar.pack(fill='x', pady=(5, 0), padx=5)
-        titlebarify(titlebar, window, True)
-
-        close = ctk.CTkButton(titlebar,
-                              height=20,
-                              width=15,
-                              corner_radius=5,
-                              fg_color='#002037',
-                              text='Close',
-                              font=("", 10),
-                              command=window.withdraw)
-        close.pack(side='right', padx=2)
-
-        pin = ctk.CTkButton(titlebar,
-                            height=20,
-                            width=15,
-                            corner_radius=5,
-                            fg_color='#002037',
-                            text='Pin',
-                            font=("", 10),
-                            command=lambda: pin_window(window, pin))
-        pin.pack(side='left', padx=2)
+        window, mainframe, titlebar = create_subwindow(f"+0+{screen_h//3}")
 
         evillabel = ctk.CTkLabel(mainframe,
-                            width=100,
-                            text="Evil Solutions",
-                            text_color="#ff0000",
-                            font=("", 20))
+                                 width=100,
+                                 text="Evil Solutions",
+                                 text_color="#ff0000",
+                                 font=("", 20))
         evillabel.pack()
 
         label = ctk.CTkLabel(mainframe,
@@ -250,200 +395,12 @@ def open_evil_solutions():
                              justify="left",
                              width=280)
         label.pack(padx=5)
+
         window.withdraw()
+        evil_solutions_windows = window
 
     except Exception as e:
         print(f"Error processing open_evil_solutions: {e}\n")
-        
-
-# Save keybinds to a JSON file
-def save_keybinds():
-    try:
-        data = {
-            "solve": keybinds[hatch_puzzle],
-            "clear": keybinds[clear_entries],
-            "clickthrough": keybinds[toggle_clickthrough],
-        }
-        with open("settings.json", "w") as f:
-            json.dump(data, f)
-        print("Keybinds saved.")
-    except Exception as e:
-        print(f"Error saving keybinds: {e}")
-
-
-def load_keybinds():
-    if not os.path.exists("settings.json"):
-        return
-    try:
-        with open("settings.json", "r") as f:
-            data = json.load(f)
-        
-        # Update solve
-        old_solve = keybinds[hatch_puzzle]
-        new_solve = data.get("solve", old_solve)
-        if new_solve != old_solve:
-            app.unbind_all(old_solve)
-            keybinds[hatch_puzzle] = new_solve
-            app.bind_all(f"<{new_solve}>", hatch_puzzle)
-        
-        # Update clear
-        old_clear = keybinds[clear_entries]
-        new_clear = data.get("clear", old_clear)
-        if new_clear != old_clear:
-            app.unbind_all(old_clear)
-            keybinds[clear_entries] = new_clear
-            app.bind_all(f"<{new_clear}>", clear_entries)
-        
-        # Update clickthrough
-        old_click = keybinds[toggle_clickthrough]
-        new_click = data.get("clickthrough", old_click)
-        if new_click != old_click:
-            app.unbind_all(old_click)
-            keybinds[toggle_clickthrough] = new_click
-            app.bind_all(f"<{new_click}>", toggle_clickthrough)
-        
-    except Exception as e:
-        print(f"Error loading keybinds: {e}")
-
-
-settings_window = None
-def open_settings():
-    try:
-        global settings_window, keybinds
-
-        def hatch_bind(button, function):
-            blacklist = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '!', '@', '#', '$', '%', '^', '&', '*', '(',
-                         ')', 'm', 'a', 't', 'h', 'r', 'o', 'u', 'n', 'd', 'c', 'e', 'i', 'l', 'f', 's', "Tab", 'Escape']
-            button.configure(text="Press a Key", fg_color='#144870')
-
-            def on_key_press(event):
-                # Ignore if not ASCII or invalid
-                if not event.keysym.isascii():
-                    print("Invalid keybind: Non-ASCII key detected.")
-                    return
-
-                key = event.keysym
-                if key in blacklist:
-                    print(f"Invalid keybind: {key}.\nFollowing keys are reserved:\n{blacklist}.")
-                    return
-
-                button.configure(text=key, fg_color='#1f6aa5')
-                app.unbind_all(keybinds[function])
-                keybinds[function] = key
-                app.bind_all(f"<{keybinds[function]}>", function)
-                print("Keybind changed to:", key)
-                save_keybinds()
-
-                settings_window.unbind("<Any-KeyPress>")
-
-            settings_window.bind("<Any-KeyPress>", on_key_press)
-            settings_window.focus_force()
-
-        if settings_window is not None and settings_window.winfo_exists():
-            settings_window.lift()
-            settings_window.focus_force()
-            return
-
-        settings_window = ctk.CTkToplevel(app)
-        window = settings_window
-        window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#1a1a1a")
-        window.after(10, lambda: window.focus_force())
-
-        mainframe = ctk.CTkFrame(window,
-                                 corner_radius=10)
-        mainframe.pack()
-
-        titlebar = ctk.CTkFrame(mainframe,
-                                height=25,
-                                fg_color='#1f6aa5',
-                                corner_radius=5)
-        titlebar.pack_propagate(False)
-        titlebar.pack(fill='x', pady=(5, 0), padx=5)
-        titlebarify(titlebar, window, True)
-
-        close = ctk.CTkButton(titlebar,
-                              height=20,
-                              width=15,
-                              corner_radius=5,
-                              fg_color='#002037',
-                              text='Close',
-                              font=("", 10),
-                              command=lambda: window.withdraw())
-        close.pack(side='right', padx=2)
-
-        pin = ctk.CTkButton(titlebar,
-                            height=20,
-                            width=15,
-                            corner_radius=5,
-                            fg_color='#002037',
-                            text='Pin',
-                            font=("", 10),
-                            command=lambda: pin_window(window, pin))
-        pin.pack(side='left', padx=2)
-
-        grid = ctk.CTkFrame(mainframe,
-                            corner_radius=5)
-        grid.pack(pady=5, padx=5)
-        
-        #Keybinds
-        Solve = ctk.CTkLabel(grid,
-                             text="Solve:",
-                             font=("", 15))
-        Solve.grid(row=0, column=0, pady=5, padx=5, sticky="w")
-
-        Clear = ctk.CTkLabel(grid,
-                             text="Clear:",
-                             font=("", 15))
-        Clear.grid(row=1, column=0, pady=5, padx=5, sticky="w")
-
-        Clickthrough = ctk.CTkLabel(grid,
-                                    text="Clickthrough:",
-                                    font=("", 15))
-        Clickthrough.grid(row=2, column=0, pady=5, padx=5, sticky="w")
-
-        grid.columnconfigure(1, weight=1)
-
-        SolveBind = ctk.CTkButton(grid,
-                                  width=90,
-                                  height=30,
-                                  border_width=1,
-                                  corner_radius=2,
-                                  text=keybinds[hatch_puzzle],
-                                  font=("", 15, 'bold'),
-                                  command=lambda: hatch_bind(SolveBind, hatch_puzzle))
-        SolveBind.grid(row=0, column=1, pady=5, padx=5)
-
-        ClearBind = ctk.CTkButton(grid,
-                                  width=90,
-                                  height=30,
-                                  border_width=1,
-                                  corner_radius=2,
-                                  text=keybinds[clear_entries],
-                                  font=("", 15, 'bold'),
-                                  command=lambda: hatch_bind(ClearBind, clear_entries))
-        ClearBind.grid(row=1, column=1, pady=5, padx=5)
-
-        ClickthroughBind = ctk.CTkButton(grid,
-                                         width=90,
-                                         height=30,
-                                         border_width=1,
-                                         corner_radius=2,
-                                         text=keybinds[toggle_clickthrough],
-                                         font=("", 15, 'bold'),
-                                         command=lambda: hatch_bind(ClickthroughBind, toggle_clickthrough))
-        ClickthroughBind.grid(row=2, column=1, pady=5, padx=5)
-
-        TabLabel = ctk.CTkLabel(grid,
-                                text="Focus Next Entry = Tab\nPrevious Entry = Shift+Tab",
-                                font=("", 15))
-        TabLabel.grid(row=3, column=0, columnspan=2, pady=5)
-
-        window.withdraw()
-
-    except Exception as e:
-        print(f"Error processing open_settings: {e}\n")
-
 
 class ConsoleWindow:
     def __init__(self, master):
@@ -463,26 +420,27 @@ class ConsoleWindow:
                 self.window.lift()
                 self.window.focus_force()
                 return
-
+            
             self.window = ctk.CTkToplevel(self.master)
-            self.window.geometry("550x300")
+            self.window.attributes("-toolwindow", True)
+            self.window.attributes('-topmost', True)
             self.window.overrideredirect(True)
-            self.window.wm_attributes("-transparentcolor", "#1a1a1a")
-            self.window.after(10, lambda: self.window.focus_force())
-
+            self.window.geometry(f"+{screen_w-550}+{screen_h-670}")
             mainframe = ctk.CTkFrame(self.window,
-                                     width=500,
-                                     height=300,
-                                     corner_radius=10)
+                                    corner_radius=10,
+                                    fg_color="#1a1a1a",
+                                    width=550,
+                                    height=300)
             mainframe.pack_propagate(False)
             mainframe.pack(fill='both')
+
 
             freedom_dive = ctk.CTkImage(light_image=Image.open(resource_path("images/freedomdive.png")),
                                         size=(550, 300))
             freedom_image = ctk.CTkLabel(mainframe,
                                          text="",
                                          image=freedom_dive)
-            freedom_image.place(x=0, y=0)
+            freedom_image.place(relx=0, rely=0, relwidth=1, relheight=1)
 
             titlebar = ctk.CTkFrame(mainframe,
                                     height=25,
@@ -492,16 +450,7 @@ class ConsoleWindow:
             titlebar.pack_propagate(False)
             titlebar.pack(fill='x', pady=5, padx=5)
             titlebarify(titlebar, self.window, True)
-
-            pin = ctk.CTkButton(titlebar,
-                                height=20,
-                                width=15,
-                                corner_radius=5,
-                                fg_color='#002037',
-                                text='Pin',
-                                font=("", 10),
-                                command=lambda: pin_window(self.window, pin))
-            pin.pack(side='left', padx=2)
+            titlebar.grid_columnconfigure(1, weight=1)
 
             clear = ctk.CTkButton(titlebar,
                                   height=20,
@@ -511,7 +460,17 @@ class ConsoleWindow:
                                   text='Clear',
                                   font=("", 10),
                                   command=self.clear_console)
-            clear.pack(side='left')
+            clear.grid(column=0, row=0, padx=2, pady=2, sticky='w')
+
+            copy_button = ctk.CTkButton(titlebar,
+                                        height=20,
+                                        width=30,
+                                        corner_radius=5,
+                                        fg_color='#002037',
+                                        text='Copy',
+                                        font=("", 10),
+                                        command=self.copy_console)
+            copy_button.grid(column=1, row=0)
 
             close = ctk.CTkButton(titlebar,
                                   height=20,
@@ -521,18 +480,27 @@ class ConsoleWindow:
                                   text='Close',
                                   font=("", 10),
                                   command=self.window.withdraw)
-            close.pack(side='right', padx=2)
+            close.grid(column=2, row=0, padx=2, sticky='e')
 
-            self.console_text = ctk.CTkTextbox(mainframe,
-                                               wrap="word",
-                                               corner_radius=0,
-                                               height=250,
-                                               width=530,
-                                               state='normal',
-                                               font=("Calibri", 12, "bold"))
-            pws.set_opacity(self.console_text, 0.9)
-            self.console_text.pack(pady=(0, 10), padx=10, expand=True)
-            self.console_text.configure(state='disabled')
+            text_frame = ctk.CTkFrame(mainframe,
+                                      fg_color="#1a1a1a")
+            pws.set_opacity(text_frame, value=0.9)
+            text_frame.pack(pady=(0, 5), padx=5, fill='both', expand=True)
+            #tk.text required for errors colormapping
+            self.console_text = tk.Text(text_frame,
+                                        wrap="word",
+                                        height=15,
+                                        width=60,
+                                        bg="#000000",
+                                        fg="#ffffff",
+                                        insertbackground="#ffffff",
+                                        font=("Calibri", 10, ""),
+                                        bd=0,
+                                        relief="flat")
+            self.console_text.pack(fill='both', expand=True)
+            # error text
+            self.console_text.tag_configure("error", foreground="#ff5959")
+            self.console_text.config(state='disabled')
 
             self.window.withdraw()
 
@@ -540,8 +508,6 @@ class ConsoleWindow:
             with open("console_error.log", "a") as f:
                 f.write(f"Error setting up console UI: {e}\n")
 
-    # full AI generated because I couldn't figure out how to redirect prints to the custom console
-    # (thus console is the only Class type present in the app)
     class NullOutput:
         def write(self, text):
             pass
@@ -565,10 +531,12 @@ class ConsoleWindow:
     def write_console(self, text):
         try:
             if self.console_text is not None:
-                self.console_text.configure(state='normal')
-                self.console_text.insert("end", text)
+                self.console_text.config(state='normal')
+                # Apply red color to error messages
+                tag = "error" if "Error" in text else None
+                self.console_text.insert("end", text, tag)
                 self.console_text.see("end")
-                self.console_text.configure(state='disabled')
+                self.console_text.config(state='disabled')
                 self.console_text.update()
 
             with open("output.log", "a") as f:
@@ -580,74 +548,101 @@ class ConsoleWindow:
     def clear_console(self):
         try:
             if self.console_text is not None:
-                self.console_text.configure(state='normal')
+                self.console_text.config(state='normal')
                 self.console_text.delete("1.0", "end")
-                self.console_text.configure(state='disabled')
+                self.console_text.config(state='disabled')
         except Exception as e:
             self.write_console(f"Error processing clear_console: {e}\n")
+
+    def copy_console(self):
+        try:
+            if self.console_text is not None:
+                text = self.console_text.get("1.0", "end-1c")
+                app.clipboard_clear()
+                app.clipboard_append(text)
+        except Exception as e:
+            self.write_console(f"Error processing copy_console: {e}\n")
 
     def toggle(self):
         if self.window is not None and self.window.winfo_exists():
             if self.window.state() == 'withdrawn':
                 self.window.deiconify()
                 self.window.lift()
-                self.window.focus_force()
             else:
                 self.window.withdraw()
 
-
+# change transparency of a window
 def change_transparency(value, window):
     try:
         window.attributes("-alpha", float(value))
     except Exception as e:
         print(f"Error processing change_transparency: {e}")
 
-
 clickthrough = False
 clickthroughlabel = None
-def toggle_clickthrough(event=None):
-    global clickthrough, clickthroughlabel
+playback_live = False
+def order_playback(event=None, cooldown=None):
+    global clickthrough, clickthroughlabel, playback_live
     try:
         if order_window is None or not order_window.winfo_exists() or order_window.state() == 'withdrawn':
-            print("Order window is not open. Open the Order window to enable clickthrough.")
+            print("Order window is not open. Open the Order window to enable playback.")
             return
 
-        order_window.lift()
-        order_window.focus_force()
-        order_window.update_idletasks()
+        if order is None or not order:
+            print("No order available. Solve a puzzle first.")
+            return
+        
+        if not playback_live:
+            playback_live = True
+            order_window.lift()
+            order_window.focus_force()
+            order_window.update_idletasks()
 
-        hwnd = windll.user32.GetForegroundWindow()
-        style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
+            if cooldown is None:
+                cooldown = settings[order_cooldown]
 
-        if not clickthrough:
+            # Enable clickthrough
+            hwnd = windll.user32.GetForegroundWindow()
+            style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
             new_style = style | 0x00000020  # WS_EX_TRANSPARENT
             windll.user32.SetWindowLongW(hwnd, -20, new_style)
-            if clickthroughlabel:
-                clickthroughlabel.configure(text="Clickthrough Enabled", text_color='#c4ffa8')
+            clickthroughlabel.configure(text="Clickthrough Enabled", text_color="#ff0000")
+            windll.user32.UpdateWindow(hwnd)
+            clickthrough = True
+
+            label_order = []
+            for i in range(5):
+                for j in range(5):
+                    text = labels[i][j].cget("text")
+                    if text and text.isdigit() and int(text) in order.values():
+                        label_order.append((int(text), labels[i][j]))
+            label_order.sort(key=lambda x: x[0])
+
+            def highlight_label(label, original_color, temp_color="#cc00ff", duration=cooldown):
+                label.configure(fg_color=temp_color)
+                app.after(duration, lambda: label.configure(fg_color=original_color))   
+
+            # Schedule highlights sequentially
+            for index, (order_num, label) in enumerate(label_order):
+                original_color = label.cget("fg_color")
+                app.after(index * cooldown,
+                        lambda lbl=label, oc=original_color: highlight_label(lbl, oc))
+
+            # Disable clickthrough and reset playback_live
+            total_duration = len(label_order) * cooldown
+            app.after(total_duration, lambda: (
+                windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020),  # Remove WS_EX_TRANSPARENT
+                clickthroughlabel.configure(text="Clickthrough Disabled", text_color='#ffa8a8'),
+                windll.user32.UpdateWindow(hwnd),
+                globals().__setitem__('clickthrough', False),
+                globals().__setitem__('playback_live', False) ))
+
+            print(f"Playback started for {len(label_order)} labels with cooldown {cooldown}ms")
         else:
-            new_style = style & ~0x00000020  # Remove WS_EX_TRANSPARENT
-            windll.user32.SetWindowLongW(hwnd, -20, new_style)
-            if clickthroughlabel:
-                clickthroughlabel.configure(text="Clickthrough Disabled", text_color='#ffa8a8')
-            force_focus_window(hwnd)
-
-        windll.user32.UpdateWindow(hwnd)
-        clickthrough = not clickthrough
-
+            print("Ongoing order playback, wait until playback is finished.")
+            
     except Exception as e:
-        print(f"Error processing toggle_clickthrough: {e}")
-
-
-def force_focus_window(hwnd):  # ctk focus_force doesn't work after disabling clickthrough for whatever reason
-    try:
-        if windll.user32.IsIconic(hwnd):
-            windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-        windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0003)  # HWND_TOPMOST
-        windll.user32.SetForegroundWindow(hwnd)
-        windll.user32.SetWindowPos(hwnd, -2, 0, 0, 0, 0, 0x0003)  # HWND_NOTOPMOST
-    except Exception as e:
-        print(f"Error processing force_focus_window: {e}")
-
+        print(f"Error processing order_playback: {e}")
 
 labels = []
 order_window = None
@@ -660,65 +655,24 @@ def open_order():
             order_window.focus_force()
             return
 
-        window = ctk.CTkToplevel(app)
-        order_window = window
-        window.resizable(True, True)
-        window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#1a1a1a")
-        window.after(10, lambda: window.focus_force())
+        window, mainframe, titlebar = create_subwindow(f"+{screen_w//3+130}+{screen_h//40}")
 
-        mainframe = ctk.CTkFrame(window,
-                                 width=262,
-                                 height=340,
-                                 corner_radius=10)
-        mainframe.pack_propagate(False)
-        mainframe.pack(fill='both')
-
-        titlebar = ctk.CTkFrame(mainframe,
-                                height=25,
-                                fg_color='#1f6aa5',
-                                corner_radius=5)
-        titlebar.pack_propagate(False)
-        titlebar.pack(fill='x', pady=5, padx=5)
-        titlebarify(titlebar, window, True)
-
-        close = ctk.CTkButton(titlebar,
-                              height=20,
-                              width=15,
-                              corner_radius=5,
-                              fg_color='#002037',
-                              text='Close',
-                              font=("", 10),
-                              command=window.withdraw)
-        close.pack(side='right', padx=2)
-
-        pin = ctk.CTkButton(titlebar,
-                            height=20,
-                            width=15,
-                            corner_radius=5,
-                            fg_color='#002037',
-                            text='Pin',
-                            font=("", 10),
-                            command=lambda: pin_window(window, pin))
-        pin.pack(side='left', padx=2)
-
-        frame = ctk.CTkFrame(mainframe)
-        frame.pack()
+        frame = ctk.CTkFrame(mainframe, fg_color='transparent')
+        frame.pack(padx=5, pady=5)
 
         grid = ctk.CTkFrame(frame)
         grid.pack()
-
         for i in range(5):
             row_labels = []
             for j in range(5):
                 label = ctk.CTkLabel(grid,
-                                     width=50,
-                                     height=50,
+                                     width=72,
+                                     height=72,
                                      justify="center",
                                      text="",
                                      fg_color="#025c9d",
                                      font=("", 16, "bold"))
-                label.grid(row=i, column=j, padx=1, pady=1)
+                label.grid(row=i, column=j, padx=1, pady=1, sticky='nsew')
                 row_labels.append(label)
             labels.append(row_labels)
 
@@ -728,19 +682,54 @@ def open_order():
                                             from_=0.1,
                                             to=1,
                                             number_of_steps=10,
-                                            command=lambda value: change_transparency(value, order_window))
-        transparency_slider.set(1)
+                                            command=lambda value: change_transparency(value, window))
+        window.attributes("-alpha", 0.73)
+        transparency_slider.set(0.7)
         transparency_slider.pack(pady=(10, 5))
 
-        clickthroughlabel = ctk.CTkLabel(mainframe,
-                                         text="Clickthrough disabled",
-                                         text_color='#ffa8a8')
-        clickthroughlabel.pack()
+        clickthroughlabel = ctk.CTkLabel(mainframe, text="Clickthrough disabled", text_color='#ffa8a8')
+        clickthroughlabel.pack(pady=(0, 10))
+
+        resize_button = ctk.CTkButton(mainframe,
+                                      width=20,
+                                      height=20,
+                                      text=">",
+                                      font=("", 12, "bold"),
+                                      fg_color="#006ec9",
+                                      hover_color="#0080ff",
+                                      text_color="#ffffff",
+                                      corner_radius=2,
+                                      cursor="size_nw_se")
+        resize_button.place(relx=1.0, rely=1.0, anchor='se', x=-5, y=-5)
+
+        # Resize event bindings
+        def start_resize(event):
+            window.resizeStartX = event.x_root
+            window.resizeStartY = event.y_root
+            window.startWidth = window.winfo_width()
+            window.startHeight = window.winfo_height()
+
+        def stop_resize(event):
+            delta_x = event.x_root - window.resizeStartX
+            new_w = max(200, window.startWidth + delta_x)
+            new_h = max(350, new_w + 90)
+            window.geometry(f"{int(new_w)}x{int(new_h)}")
+            mainframe.configure(width=int(new_w), height=int(new_h))
+            cell_size = (new_w - 20) // 5
+            for row in labels:
+                for label in row:
+                    label.configure(width=cell_size,
+                                    height=cell_size,
+                                    font=("", max(12, cell_size // 4), "bold"))
+
+        resize_button.bind("<Button-1>", start_resize)
+        resize_button.bind("<ButtonRelease-1>", stop_resize)
+
         window.withdraw()
+        order_window = window
 
     except Exception as e:
         print(f"Error processing open_order: {e}\n")
-
 
 puzzle4_labels = []
 puzzle4_window = None
@@ -753,79 +742,38 @@ def open_puzzle4():
             puzzle4_window.focus_force()
             return
 
-        window = ctk.CTkToplevel(app)
-        puzzle4_window = window
-        window.overrideredirect(True)
-        window.wm_attributes("-transparentcolor", "#1a1a1a")
-        window.after(10, lambda: window.focus_force())
+        window, mainframe, titlebar = create_subwindow(f"+{screen_w//3}+{screen_h//2.1}")
 
-        mainframe = ctk.CTkFrame(window,
-                                 width=520,
-                                 height=200,
-                                 corner_radius=10)
-        mainframe.pack_propagate(False)
-        mainframe.pack(fill='both')
-
-        titlebar = ctk.CTkFrame(mainframe,
-                                height=25,
-                                fg_color='#1f6aa5',
-                                corner_radius=5)
-        titlebar.pack_propagate(False)
-        titlebar.pack(fill='x', pady=5, padx=5)
-        titlebarify(titlebar, window, True)
-
-        close = ctk.CTkButton(titlebar,
-                              height=20,
-                              width=15,
-                              corner_radius=5,
-                              fg_color='#002037',
-                              text='Close',
-                              font=("", 10),
-                              command=window.withdraw)
-        close.pack(side='right', padx=2)
-
-        pin = ctk.CTkButton(titlebar,
-                            height=20,
-                            width=15,
-                            corner_radius=5,
-                            fg_color='#002037',
-                            text='Pin',
-                            font=("", 10),
-                            command=lambda: pin_window(window, pin))
-        pin.pack(side='left', padx=2)
-
-        frame = ctk.CTkFrame(mainframe)
+        frame = ctk.CTkFrame(mainframe, fg_color='transparent')
         frame.pack()
 
         grid = ctk.CTkFrame(frame)
-        grid.pack()
+        grid.pack(padx=5, pady=5)
 
         for i in range(5):
             puzzle4_row_labels = []
             for j in range(5):
-                label = ctk.CTkLabel(
-                    grid,
-                    width=100,
-                    height=30,
-                    justify="center",
-                    text="",
-                    fg_color="#025c9d",
-                    font=("", 16, "bold"),
-                    cursor="hand2")  # pointer cursor on hover
+                label = ctk.CTkLabel(grid,
+                                     width=100,
+                                     height=30,
+                                     justify="center",
+                                     text="",
+                                     fg_color="#025c9d",
+                                     font=("", 16, "bold"),
+                                     cursor="hand2")
                 label.grid(row=i, column=j, padx=1, pady=1)
                 label.bind("<Button-1>", copy_to_clipboard)
                 darken(label, factor=0.8, bool=True)
-                # Required to make copying feature to work on the whole label box
                 label._label.place(relwidth=1, relheight=1, relx=0, rely=0, anchor="nw")
                 
                 puzzle4_row_labels.append(label)
             puzzle4_labels.append(puzzle4_row_labels)
 
         window.withdraw()
+        puzzle4_window = window
 
     except Exception as e:
-        print(f"Error processing open_order: {e}\n")
-
+        print(f"Error processing open_puzzle4: {e}\n")
 
 def toggle_window(window):
     if window is not None and window.winfo_exists():
@@ -836,22 +784,33 @@ def toggle_window(window):
         else:
             window.withdraw()
 
-
 # window labels copying for puzzle 4
 def copy_to_clipboard(event):
     label_text = event.widget.master.cget("text")
     app.clipboard_clear()
     app.clipboard_append(label_text)
 
+# reset entry borders to default color
+def reset_entry_borders():
+    for i in range(5):
+        for j in range(5):
+            entries[i][j].configure(border_color="#acacac")
+
+# calculate cell number for error reporting
+def get_cell_number(i, j):
+    return i * 5 + j + 1
 
 def hatch_puzzle(event=None):
     try:
+        reset_entry_borders()
         values = []
         checkstop = False
         puzzle = 124
-        for row in entries:
-            for entry in row:
-                data = str(entry.get())
+        error_detected = False
+
+        for i in range(5):
+            for j in range(5):
+                data = str(entries[i][j].get()).strip()
                 values.append(data)
                 if not checkstop:
                     if " " in data or "t" in data:
@@ -872,15 +831,40 @@ def hatch_puzzle(event=None):
         else:
             print(f"Detected Puzzle #1/#2/#4 Order")
             puzzle1_2(values)
+
+        if error_detected:
+            print("Please check highlighted cells for invalid inputs.")
+
     except Exception as e:
         print(f"Error processing hatch_puzzle: {e}\n")
+        for i in range(5):
+            for j in range(5):
+                entries[i][j].configure(border_color="#ff0000")
+        print("All cells highlighted due to general error.")
 
-
+order = None
 def puzzle1_2(values):
     try:
+        global order
         replace = str.maketrans("!@#$%^&*()", "1234567890")
+        error_detected = False
+        for i in range(5):
+            for j in range(5):
+                num = values[i * 5 + j]
+                if num == '':
+                    continue
+                try:
+                    int(num.translate(replace))
+                except ValueError as e:
+                    print(f"Error in cell {get_cell_number(i, j)}: Invalid number format '{num}'")
+                    entries[i][j].configure(border_color="#ff0000")
+                    error_detected = True
+
         values = [int(num.translate(replace)) if num != '' else '' for num in values]
         print(f"Converted: {values}")
+
+        if error_detected:
+            return
 
         non_zero_values = [value for value in values if value != '']
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
@@ -891,20 +875,45 @@ def puzzle1_2(values):
             label_index = 0
             for i in range(5):
                 for j in range(5):
-                    labels[i][j].configure(
-                        text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
+                    labels[i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
                     label_index += 1
 
     except Exception as e:
         print(f"Error processing Puzzle #1/#2: {e}")
-
+        for i in range(5):
+            for j in range(5):
+                if values[i * 5 + j] != '':
+                    entries[i][j].configure(border_color="#ff0000")
+                    print(f"Error in cell {get_cell_number(i, j)}: Unable to process '{values[i * 5 + j]}'")
 
 def puzzle3(values):
     try:
+        global order
         replace = str.maketrans("t", " ")
-        values = [num.translate(replace).split() for num in values]
-        base10s = [int(str(i[0]), int(i[1])) if i != [] else 0 for i in values]
-        print(f"Transferred to base 10: {base10s}")
+        error_detected = False
+        base10s = []
+        for i in range(5):
+            for j in range(5):
+                num = values[i * 5 + j]
+                if num == '':
+                    base10s.append(0)
+                    continue
+                try:
+                    num = num.translate(replace).split()
+                    if len(num) != 2:
+                        raise ValueError("Invalid format: Expected number and base")
+                    number, base = num
+                    base10s.append(int(str(number), int(base)))
+                except ValueError as e:
+                    print(f"Error in cell {get_cell_number(i, j)}: Invalid base conversion '{num}' - {str(e)}")
+                    entries[i][j].configure(border_color="#ff0000")
+                    error_detected = True
+                    base10s.append(0)
+
+        print(f"Base 10: {base10s}")
+
+        if error_detected:
+            return
 
         non_zero_values = [value for value in base10s if value != 0]
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
@@ -915,23 +924,34 @@ def puzzle3(values):
             label_index = 0
             for i in range(5):
                 for j in range(5):
-                    labels[i][j].configure(
-                        text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
+                    labels[i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
                     label_index += 1
 
     except Exception as e:
         print(f"Error processing Puzzle #3: {e}")
-
+        for i in range(5):
+            for j in range(5):
+                if values[i * 5 + j] != '':
+                    entries[i][j].configure(border_color="#ff0000")
+                    print(f"Error in cell {get_cell_number(i, j)}: Unable to process '{values[i * 5 + j]}'")
 
 # puzzle 4
+def luau_round(n, ndigits=0):
+    scale = 10 ** ndigits
+    n_scaled = n * scale
+    result = math.floor(n_scaled + 0.5) if n_scaled >= 0 else math.ceil(n_scaled - 0.5)
+    return result / scale if ndigits > 0 else int(result / scale)
+
+# replacing default python round to mimic luau's math.round()
+math.round = luau_round
+
 def formula_translation(n):
     replacements = {
         '^': '**',
-        'pi': '3.14',
-        'r(': 'round(',
+        'p': '3.14',
+        'r(': 'math.round(',
         'f(': 'math.floor(',
-        'ce(': 'math.ceil(',
-        's(': 'math.ceil(',
+        'c(': 'math.ceil(',
         ')(': ')*(',
     }
     for old, new in replacements.items():
@@ -980,12 +1000,31 @@ def puzzle4_solving(form):
     elif 'x' in form and not 'a' in form:
         return type1_equation_solver(form)
     else:
-        return eval(form) if eval(form) is not list else eval(form)[0]
+        return eval(form) if not isinstance(eval(form), list) else eval(form)[0]
 
 def puzzle4(values):
     try:
-        solutions = [puzzle4_solving(value) if value != '' else '' for value in values]
+        global order
+        solutions = []
+        error_detected = False
+        for i in range(5):
+            for j in range(5):
+                value = values[i * 5 + j]
+                if value == '':
+                    solutions.append('')
+                    continue
+                try:
+                    solutions.append(puzzle4_solving(value))
+                except Exception as e:
+                    print(f"Error in cell {get_cell_number(i, j)}: Unable to solve '{value}' - {str(e)}")
+                    entries[i][j].configure(border_color="#ff0000")
+                    error_detected = True
+                    solutions.append('')
+
         print(f"Answers: {solutions}")
+
+        if error_detected:
+            return
 
         non_empty_solutions = [sol for sol in solutions if sol != '']
         order = {num: i + 1 for i, num in enumerate(sorted(non_empty_solutions))}
@@ -996,21 +1035,23 @@ def puzzle4(values):
             label_index = 0
             for i in range(5):
                 for j in range(5):
-                    labels[i][j].configure(
-                        text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
+                    labels[i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
                     label_index += 1
         
         if puzzle4_window is not None and puzzle4_window.winfo_exists():
             label_index = 0
             for i in range(5):
                 for j in range(5):
-                    puzzle4_labels[i][j].configure(
-                        text=str(solutions[label_index]) if solutions[label_index] != '' else '')
+                    puzzle4_labels[i][j].configure(text=str(solutions[label_index]) if solutions[label_index] != '' else '')
                     label_index += 1
 
     except Exception as e:
         print(f"Error processing Puzzle #4: {e}")
-
+        for i in range(5):
+            for j in range(5):
+                if values[i * 5 + j] != '':
+                    entries[i][j].configure(border_color="#ff0000")
+                    print(f"Error in cell {get_cell_number(i, j)}: Unable to process '{values[i * 5 + j]}'")
 
 def limit_input(entry_text, max_length):
     try:
@@ -1019,12 +1060,16 @@ def limit_input(entry_text, max_length):
     except Exception as e:
         print(f"Error processing limit_input: {e}")
 
-
 def clear_entries(event=None):
     try:
-        for row in entries:
-            for entry in row:
-                entry.delete(0, "end")
+        global order, labels, puzzle4_labels
+        for i in range(5):
+            for j in range(5):
+                entries[i][j].delete(0, "end")
+                entries[i][j].configure(border_color="#acacac")
+                labels[i][j].configure(text="")
+                puzzle4_labels[i][j].configure(text="")
+        order = None
         print("Inputs Cleared")
     except Exception as e:
         print(f"Error processing clear_entries: {e}")
@@ -1038,6 +1083,35 @@ def focus_out(event):
     event.widget.master.configure(border_color="#acacac")
 
 
+# right bracket auto addition
+def bracket_helper(event):
+    try:
+        entry = event.widget
+        pos = entry.index("insert")
+        entry.insert(pos, "()")
+        entry.icursor(pos + 1)
+        return "break"
+
+    except Exception as e:
+        print(f"Error processing handle_parenthesis: {e}")
+
+
+expanded = False
+def resize_window(button):
+    try:
+        global expanded
+        current_y = app.winfo_y()
+        if not expanded:
+            app.geometry(f"{screen_w}x{app_height}+-8+{current_y}")
+            button.configure(text="> <")
+            expanded = True
+        else:
+            app.geometry(f"545x{app_height}+{screen_w//2-8-545//2}+{current_y}")
+            button.configure(text="< >")
+            expanded = False
+    except Exception as e:
+        print(f"Error processing resize_window: {e}")
+
 # force dark mode
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -1048,6 +1122,10 @@ app.minsize(545, 0)
 app.title("HPSolver")
 app.iconbitmap(resource_path(r"images\M.ico"))
 icon_path = resource_path(r"images\M.ico")
+
+screen_w = app.winfo_screenwidth()
+screen_h = app.winfo_screenheight()
+
 app.grid_columnconfigure(0, weight=1)
 
 frame = ctk.CTkFrame(app, bg_color='#1a1a1a', fg_color="transparent")
@@ -1064,29 +1142,27 @@ for j in range(5):
     grid1.columnconfigure(j, weight=1)
 
 grid2 = ctk.CTkFrame(frame, fg_color='transparent')
-grid2.grid(row=2, column=0, sticky="ew", pady=5) 
-grid2.grid_columnconfigure(1, weight=1) 
+grid2.grid(row=2, column=0, sticky="ew", pady=5)
+grid2.grid_columnconfigure(1, weight=1)
 
 inputlabel = ctk.CTkLabel(grid0,
                           width=100,
                           text="Input",
-                          font=("", 18))
-inputlabel.grid(row=0, column=0, columnspan=5)
+                          font=("", 18, "bold"))
+inputlabel.grid(row=0, column=0, columnspan=6)
 
 pin_button = ctk.CTkButton(grid0,
                            width=40,
                            height=20,
                            text="Pin",
-                           font=("", 15),
+                           font=("", 15, "bold"),
                            command=lambda: pin_window(app, pin_button))
 pin_button.grid(row=0, column=0, sticky='w')
 
-settings_icon = ctk.CTkImage(light_image=Image.open(resource_path("images/settings.png")),
-                             size=(15, 15))
+settings_icon = ctk.CTkImage(light_image=Image.open(resource_path("images/settings.png")), size=(15, 15))
 settings_button = ctk.CTkButton(grid0,
                                 width=20,
-                                height=20,
-                                text="",
+                                height=20, text="",
                                 image=settings_icon,
                                 command=lambda: toggle_window(settings_window))
 settings_button.grid(row=0, column=1, sticky='w', padx=5)
@@ -1100,22 +1176,30 @@ info_button = ctk.CTkButton(grid0,
 info_button.grid(row=0, column=2, sticky='w')
 
 evil_info_button = ctk.CTkButton(grid0,
-                            width=20,
-                            height=20,
-                            text="?",
-                            font=("", 13, "bold"),
-                            text_color='#ff0000',
-                            command=lambda: toggle_window(evil_solutions_windows))
+                                 width=20,
+                                 height=20,
+                                 text="?",
+                                 font=("", 13, "bold"),
+                                 text_color='#ff0000',
+                                 command=lambda: toggle_window(evil_solutions_windows))
 evil_info_button.grid(row=0, column=3, sticky='w', padx=(5, 0))
+
+resize_button = ctk.CTkButton(grid0,
+                              width=40, 
+                              height=20,
+                              text='< >',
+                              font=("", 16, "bold"),
+                              command=lambda: resize_window(resize_button))
+resize_button.grid(row=0, column=4, padx=5, sticky='e')
 
 console = ConsoleWindow(app)
 console_button = ctk.CTkButton(grid0,
                                width=80,
                                height=20,
                                text="Console",
-                               font=("", 15),
+                               font=("", 15, "bold"),
                                command=console.toggle)
-console_button.grid(row=0, column=4, sticky='e')
+console_button.grid(row=0, column=5, sticky='e')
 
 max_characters = 100
 entries = []
@@ -1125,8 +1209,7 @@ for i in range(5):
     for j in range(5):
         entry = ctk.CTkEntry(grid1,
                              justify="center",
-                             height=35,
-                             width=0,
+                             height=35, width=0,
                              border_width=1,
                              border_color="#acacac",
                              corner_radius=0,
@@ -1135,6 +1218,7 @@ for i in range(5):
                              font=("", 16))
         entry.bind("<FocusIn>", focus_in)
         entry.bind("<FocusOut>", focus_out)
+        entry.bind("<KeyPress-(>", bracket_helper)
         entry.grid(row=i + 1, column=j, sticky='ew', padx=1, pady=1)
         row_entries.append(entry)
     entries.append(row_entries)
@@ -1147,10 +1231,10 @@ order_button = ctk.CTkButton(grid2,
 order_button.grid(row=0, column=0, sticky='w')
 
 puzzle4_button = ctk.CTkButton(grid2,
-                            width=130,
-                            text='P4 Answers',
-                            font=("", 20),
-                            command=lambda: toggle_window(puzzle4_window))
+                               width=130,
+                               text='P4 Answers',
+                               font=("", 20),
+                               command=lambda: toggle_window(puzzle4_window))
 puzzle4_button.grid(row=0, column=1, padx=(5, 0), sticky='w')
 
 clear_button = ctk.CTkButton(grid2,
@@ -1158,29 +1242,33 @@ clear_button = ctk.CTkButton(grid2,
                              text="Clear",
                              font=("", 20),
                              command=clear_entries)
-clear_button.grid(row=0, column=2, padx=(0, 5), sticky='e')
+clear_button.grid(row=0, column=3, padx=(0, 5), sticky='e')
 
 solve_button = ctk.CTkButton(grid2,
                              width=130,
-                             text="Solve",
+                             text="Solve", 
                              font=("", 20),
                              command=hatch_puzzle)
-solve_button.grid(row=0, column=3, sticky='e')
+solve_button.grid(row=0, column=4, sticky='e')
+
+app.geometry(f"+{screen_w//2-app.winfo_width()-118}+{screen_h-app.winfo_height()-155}")
 
 # defaults
-keybinds = {
-    toggle_clickthrough: "F1",
+order_cooldown = object()
+settings = {
     hatch_puzzle: "Return",
     clear_entries: "y",
+    order_playback: "F1",
+    order_cooldown: 2000
 }
 
-for function, key in keybinds.items():
-    app.bind_all(f"<{key}>", function)
+for function, key in settings.items():
+    if isinstance(key, str):
+        app.bind_all(f"<{key}>", function)
 
-# Loading saved keybinds from config (after defaults)
-load_keybinds()
+load_settings()
 
-# Preloading top level windows
+# Preloading subwindows
 open_settings()
 open_info()
 open_order()
@@ -1188,9 +1276,38 @@ open_puzzle4()
 open_evil_solutions()
 
 def on_close():
-    save_keybinds()
+    save_settings()
     app.destroy()
 
 app.protocol("WM_DELETE_WINDOW", on_close)
+
+# Keeping track of subwindows to minimize along side main window
+visible_subwindows = []
+subwindows = [settings_window,
+              info_window,
+              evil_solutions_windows,
+              order_window,
+              puzzle4_window,
+              console.window]
+
+def on_minimize(event):
+    if event.widget == app:
+        visible_subwindows.clear()
+        for win in subwindows:
+            if win and win.winfo_exists() and win.state() != 'withdrawn':
+                visible_subwindows.append(win)
+                win.withdraw()
+
+def on_restore(event):
+    if event.widget == app:
+        for win in visible_subwindows:
+            if win and win.winfo_exists():
+                win.deiconify()
+
+app.bind('<Unmap>', on_minimize)
+app.bind('<Map>', on_restore)
+
+app.update()
+app_height = app.winfo_height()
 
 app.mainloop()

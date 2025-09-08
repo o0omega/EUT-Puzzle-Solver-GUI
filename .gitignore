@@ -4,4 +4,5 @@ dist/
 HPSolver.spec
 settings.json
 output.log
+console_error.log
 # python and pyinstaller files
