@@ -255,7 +255,7 @@ def open_settings():
             settings_window.focus_force()
             return
 
-        window, mainframe, titlebar = create_subwindow(geometry=f"+{screen_w - 225}+{screen_h//7}")
+        window, mainframe, titlebar = create_subwindow(geometry=f"+{screen_w - 225}+{screen_h//10}")
 
         grid = ctk.CTkFrame(mainframe, corner_radius=5)
         grid.pack(pady=5, padx=5)
@@ -578,11 +578,14 @@ def change_transparency(value, window):
     except Exception as e:
         print(f"Error processing change_transparency: {e}")
 
-clickthrough = False
+
 clickthroughlabel = None
 playback_live = False
+
 def order_playback(event=None, cooldown=None):
-    global clickthrough, clickthroughlabel, playback_live
+    global clickthroughlabel, playback_live, hwnd
+    after_id = None
+
     try:
         if order_window is None or not order_window.winfo_exists() or order_window.state() == 'withdrawn':
             print("Order window is not open. Open the Order window to enable playback.")
@@ -591,7 +594,7 @@ def order_playback(event=None, cooldown=None):
         if order is None or not order:
             print("No order available. Solve a puzzle first.")
             return
-        
+
         if not playback_live:
             playback_live = True
             order_window.lift()
@@ -602,13 +605,10 @@ def order_playback(event=None, cooldown=None):
                 cooldown = settings[order_cooldown]
 
             # Enable clickthrough
-            hwnd = windll.user32.GetForegroundWindow()
+            hwnd = windll.user32.GetForegroundWindow() # declare only once here!!!!!
             style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
-            new_style = style | 0x00000020  # WS_EX_TRANSPARENT
-            windll.user32.SetWindowLongW(hwnd, -20, new_style)
-            clickthroughlabel.configure(text="Clickthrough Enabled", text_color="#ff0000")
-            windll.user32.UpdateWindow(hwnd)
-            clickthrough = True
+            windll.user32.SetWindowLongW(hwnd, -20, style | 0x00000020)  # WS_EX_TRANSPARENT
+            clickthroughlabel.configure(text="Clickthrough Enabled", text_color="#50ff6d")
 
             label_order = []
             for i in range(5):
@@ -618,31 +618,54 @@ def order_playback(event=None, cooldown=None):
                         label_order.append((int(text), labels[i][j]))
             label_order.sort(key=lambda x: x[0])
 
-            def highlight_label(label, original_color, temp_color="#cc00ff", duration=cooldown):
-                label.configure(fg_color=temp_color)
-                app.after(duration, lambda: label.configure(fg_color=original_color))   
+            def highlight_sequence(idx):
+                global playback_live
+                nonlocal after_id, label_order, cooldown
+                if not playback_live:
+                    return
+                if idx >= len(label_order):
+                    style = windll.user32.GetWindowLongW(hwnd, -20)
+                    windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # Remove WS_EX_TRANSPARENT
+                    clickthroughlabel.configure(text="Clickthrough Disabled", text_color='#ffa8a8')
+                    windll.user32.UpdateWindow(hwnd)
+                    playback_live = False
+                    after_id = None
+                    print("Playback completed.")
+                    return
 
-            # Schedule highlights sequentially
-            for index, (order_num, label) in enumerate(label_order):
+                order_num, label = label_order[idx]
                 original_color = label.cget("fg_color")
-                app.after(index * cooldown,
-                        lambda lbl=label, oc=original_color: highlight_label(lbl, oc))
+                label.configure(fg_color="#cc00ff")
 
-            # Disable clickthrough and reset playback_live
-            total_duration = len(label_order) * cooldown
-            app.after(total_duration, lambda: (
-                windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020),  # Remove WS_EX_TRANSPARENT
-                clickthroughlabel.configure(text="Clickthrough Disabled", text_color='#ffa8a8'),
-                windll.user32.UpdateWindow(hwnd),
-                globals().__setitem__('clickthrough', False),
-                globals().__setitem__('playback_live', False) ))
+                def unhighlight_and_next():
+                    nonlocal after_id
+                    label.configure(fg_color=original_color)
+                    highlight_sequence(idx + 1)
 
-            print(f"Playback started for {len(label_order)} labels with cooldown {cooldown}ms")
+                after_id = app.after(cooldown, unhighlight_and_next)
+
+            highlight_sequence(0)
+            print(f"Playback started for {len(label_order)} labels with cooldown of {cooldown}ms")
         else:
-            print("Ongoing order playback, wait until playback is finished.")
-            
+            playback_live = False
+            if after_id is not None:
+                app.after_cancel(after_id)
+                after_id = None
+
+            for i in range(5):
+                for j in range(5):
+                    labels[i][j].configure(fg_color="#025c9d")
+
+            style = windll.user32.GetWindowLongW(hwnd, -20)
+            windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # Remove WS_EX_TRANSPARENT
+            clickthroughlabel.configure(text="Clickthrough Disabled", text_color='#ffa8a8')
+            windll.user32.UpdateWindow(hwnd)
+            print("Playback stopped.")
+
     except Exception as e:
         print(f"Error processing order_playback: {e}")
+
+
 
 labels = []
 order_window = None
