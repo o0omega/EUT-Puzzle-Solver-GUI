@@ -1,4 +1,4 @@
-Version = "1.6"
+Version = "1.6a"
 InfoText = """\
 Any app's window must be in focus 
 for settings to function.
@@ -8,14 +8,15 @@ For Puzzle #3 you can seperate the number and
 the base (the other number in ()) with a space
 or a t, so, for example, "100110 (2)" (in game)
 will be "100110 2" or "100110t2" in your input.
-For Puzzle #4 some questions are labeled as "evil"
-by the creator of the puzzle, so you can input their
+For Puzzle #4 you don't need to use spaces at all.
+Also, some questions are labeled as "evil" by the
+creator of the puzzle, so you can input their
 answers right away.
 
 Made by ozo (Discord @m6ga)
 Contributed by ltrc125 (@cat.0400)
 DM any bugs or suggestions, a forum post for the
-app can be found on EUT discord.\
+app can be found on the EUT's discord server.\
 """
 Evil_Solutions = """\
 "Asap" question's answer is 1
@@ -54,6 +55,120 @@ def resource_path(relative_path):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
+
+# Save config to a JSON file
+def save_settings():
+    try:
+        settings["main_window_location"] = f"+{app.winfo_x()}+{app.winfo_y()}"
+        settings["main_window_size"] = f"{app.winfo_width()}x{app.winfo_height()}"
+        data = {
+            "hatch_puzzle":   settings[hatch_puzzle],
+            "clear_entries":  settings[clear_entries],
+            "order_playback": settings[order_playback],
+            "order_cooldown": settings["order_cooldown"],
+            "main_window_location":           settings["main_window_location"],
+            "main_window_size":               settings["main_window_size"],
+            "settings_window_location":       settings["settings_window_location"],
+            "info_window_location":           settings["info_window_location"],
+            "evil_solutions_window_location": settings["evil_solutions_window_location"],
+            "order_window_location":          settings["order_window_location"],
+            "order_window_size":              settings["order_window_size"],
+            "puzzle4_window_location":        settings["puzzle4_window_location"],
+            "console_window_location":        settings["console_window_location"],
+        }
+        with open("settings.json", "w") as f:
+            json.dump(data, f, indent=4)
+        print("Config saved.")
+    except Exception as e:
+        print(f"Error saving config: {e}")
+
+
+def load_settings():
+    if not os.path.exists("settings.json"):
+        app.bind_all(f"<{settings[hatch_puzzle]}>", hatch_puzzle)
+        app.bind_all(f"<{settings[clear_entries]}>", clear_entries)
+        app.bind_all(f"<{settings[order_playback]}>", order_playback)
+        return
+    try:
+        with open("settings.json", "r") as f:
+            data = json.load(f)
+
+        # Keybinds
+        # Solve
+        old_solve = settings[hatch_puzzle]
+        new_solve = data.get("hatch_puzzle", old_solve)
+        if new_solve != old_solve and new_solve != '??':
+            settings[hatch_puzzle] = new_solve
+            app.bind_all(f"<{new_solve}>", hatch_puzzle)
+        # Clear
+        old_clear = settings[clear_entries]
+        new_clear = data.get("clear_entries", old_clear)
+        if new_clear != old_clear and new_clear != '??':
+            settings[clear_entries] = new_clear
+            app.bind_all(f"<{new_clear}>", clear_entries)
+        # Order playback
+        old_playback = settings[order_playback]
+        new_playback = data.get("order_playback", old_playback)
+        if new_playback != old_playback and new_playback != '??':
+            settings[order_playback] = new_playback
+            app.bind_all(f"<{new_playback}>", order_playback)
+
+        # Other
+        # Order cooldown
+        old_cooldown = settings["order_cooldown"]
+        new_cooldown = data.get("order_cooldown", old_cooldown)
+        if new_cooldown != old_cooldown:
+            settings["order_cooldown"] = int(new_cooldown)
+
+        # Window Stuff
+        # Main
+        old_main_window_location = settings["main_window_location"]
+        new_main_window_location = data.get("main_window_location", old_main_window_location)
+        if new_main_window_location != old_main_window_location:
+            settings["main_window_location"] = new_main_window_location
+        old_main_window_size = settings["main_window_size"]
+        new_main_window_size = data.get("main_window_size", old_main_window_size)
+        if new_main_window_size != old_main_window_size:
+            settings["main_window_size"] = new_main_window_size
+        # Settings
+        old_settings_window_location = settings["settings_window_location"]
+        new_settings_window_location = data.get("settings_window_location", old_settings_window_location)
+        if new_settings_window_location != old_settings_window_location:
+            settings["settings_window_location"] = new_settings_window_location
+        # Info
+        old_info_window_location = settings["info_window_location"]
+        new_info_window_location = data.get("info_window_location", old_info_window_location)
+        if new_info_window_location != old_info_window_location:
+            settings["info_window_location"] = new_info_window_location
+        # Evil Solutions
+        old_evil_solutions_window_location = settings["evil_solutions_window_location"]
+        new_evil_solutions_window_location = data.get("evil_solutions_window_location", old_evil_solutions_window_location)
+        if new_evil_solutions_window_location != old_evil_solutions_window_location:
+            settings["evil_solutions_window_location"] = new_evil_solutions_window_location
+        # Order
+        old_order_window_location = settings["order_window_location"]
+        new_order_window_location = data.get("order_window_location", old_order_window_location)
+        if new_order_window_location != old_order_window_location:
+            settings["order_window_location"] = new_order_window_location
+        old_order_window_size = settings["order_window_size"]
+        new_order_window_size = data.get("order_window_size", old_order_window_size)
+        if new_order_window_size != old_order_window_size:
+            settings["order_window_size"] = new_order_window_size
+        # Puzzle 4 Answers
+        old_puzzle4_window_location = settings["puzzle4_window_location"]
+        new_puzzle4_window_location = data.get("puzzle4_window_location", old_puzzle4_window_location)
+        if new_puzzle4_window_location != old_puzzle4_window_location:
+            settings["puzzle4_window_location"] = new_puzzle4_window_location
+        # Console
+        old_console_window_location = settings["console_window_location"]
+        new_console_window_location = data.get("console_window_location", old_console_window_location)
+        if new_console_window_location != old_console_window_location:
+            settings["console_window_location"] = new_console_window_location
+
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+
+
 # top window pinning utility
 def pin_window(window, button):
     try:
@@ -62,6 +177,7 @@ def pin_window(window, button):
         button.configure(text="Unpin" if not current_topmost else "Pin")
     except Exception as e:
         print(f"Error processing pin_window: {e}")
+
 
 # allows for darkening any colour, mainly applied to widgets upon hovering as feedback
 def darken(widget, factor=0.8, bool=True):
@@ -82,114 +198,66 @@ def darken(widget, factor=0.8, bool=True):
     return darken_color
 
 # custom titlebar for subwindows
-def titlebarify(widget, window, darkening=False):
-    initial_color = widget.cget("fg_color")
-    darken_color = darken(widget)
-
-    def start_move(event):
-        window._offset_x = event.x_root - window.winfo_rootx()
-        window._offset_y = event.y_root - window.winfo_rooty()
-        widget.configure(fg_color=f"#{darken_color}")
-
-    def do_move(event):
-        new_x = event.x_root - window._offset_x
-        new_y = event.y_root - window._offset_y
-        window.geometry(f"+{new_x}+{new_y}")
-
-    def stop_move(event):
-        widget.configure(fg_color=initial_color)
-
-    widget.bind("<Button-1>", start_move)
-    widget.bind("<B1-Motion>", do_move)
-    widget.bind("<ButtonRelease-1>", stop_move)
-
-# Save config to a JSON file
-def save_settings():
+def titlebarify(widget, window, location_key):
     try:
-        data = {
-            "solve": settings[hatch_puzzle],
-            "clear": settings[clear_entries],
-            "playback": settings[order_playback],
-            "cooldown": int(settings[order_cooldown]),
-        }
-        with open("settings.json", "w") as f:
-            json.dump(data, f)
-        print("Config saved.")
-    except Exception as e:
-        print(f"Error saving config: {e}")
+        initial_color = widget.cget("fg_color")
+        darken_color = darken(widget)
 
-def load_settings():
-    if not os.path.exists("settings.json"):
-        return
+        def start_move(event):
+            window._offset_x = event.x_root - window.winfo_rootx()
+            window._offset_y = event.y_root - window.winfo_rooty()
+            widget.configure(fg_color=f"#{darken_color}")
+
+        def do_move(event):
+            new_x = event.x_root - window._offset_x
+            new_y = event.y_root - window._offset_y
+            window.geometry(f"+{new_x}+{new_y}")
+
+        def stop_move(event):
+            widget.configure(fg_color=initial_color)
+            settings[location_key] = f"+{int(window.winfo_x())}+{int(window.winfo_y())}"
+
+        widget.bind("<Button-1>", start_move)
+        widget.bind("<B1-Motion>", do_move)
+        widget.bind("<ButtonRelease-1>", stop_move)
+    except Exception as e:
+        print(f"Error processing titlebarify: {e}\n")
+
+
+def create_subwindow(location_key):
     try:
-        with open("settings.json", "r") as f:
-            data = json.load(f)
-        
-        # Solve
-        old_solve = settings[hatch_puzzle]
-        new_solve = data.get("solve", old_solve)
-        if new_solve != old_solve and new_solve != '??':
-            app.unbind_all(old_solve)
-            settings[hatch_puzzle] = new_solve
-            app.bind_all(f"<{new_solve}>", hatch_puzzle)
-        
-        # Clear
-        old_clear = settings[clear_entries]
-        new_clear = data.get("clear", old_clear)
-        if new_clear != old_clear and new_solve != '??':
-            app.unbind_all(old_clear)
-            settings[clear_entries] = new_clear
-            app.bind_all(f"<{new_clear}>", clear_entries)
-        
-        # Order playback
-        old_playback = settings[order_playback]
-        new_playback = data.get("playback", old_playback)
-        if new_playback != old_playback and new_solve != '??':
-            app.unbind_all(old_playback)
-            settings[order_playback] = new_playback
-            app.bind_all(f"<{new_playback}>", order_playback)
+        window = ctk.CTkToplevel(app)
+        window.attributes("-toolwindow", True)
+        window.attributes('-topmost', True)
+        window.overrideredirect(True)
+        window.wm_attributes("-transparentcolor", "#1a1a1a")
+        window.after(10, lambda: window.focus_force())
+        window.geometry(settings[location_key])
 
-        # Order cooldown
-        old_cooldown = settings[order_cooldown]
-        new_cooldown = data.get("cooldown", old_cooldown)
-        if new_cooldown != old_cooldown:
-            settings[order_cooldown] = int(new_cooldown)
-    
+        mainframe = ctk.CTkFrame(window, corner_radius=10)
+        mainframe.pack()
+
+        titlebar = ctk.CTkFrame(mainframe,
+                                height=25,
+                                fg_color='#1f6aa5',
+                                corner_radius=5)
+        titlebar.pack_propagate(False)
+        titlebar.pack(fill='x', pady=(5, 0), padx=5)
+        titlebarify(titlebar, window, location_key)
+
+        close = ctk.CTkButton(titlebar,
+                            height=20,
+                            width=15,
+                            corner_radius=5,
+                            fg_color='#002037',
+                            text='Close',
+                            font=("", 10),
+                            command=window.withdraw)
+        close.pack(side='right', padx=2)
+
+        return window, mainframe, titlebar
     except Exception as e:
-        print(f"Error loading settings: {e}")
-
-def create_subwindow(geometry=""):
-    window = ctk.CTkToplevel(app)
-    window.attributes("-toolwindow", True)
-    window.attributes('-topmost', True)
-    window.overrideredirect(True)
-    window.wm_attributes("-transparentcolor", "#1a1a1a")
-    window.after(10, lambda: window.focus_force())
-    if geometry:
-        window.geometry(geometry)
-
-    mainframe = ctk.CTkFrame(window, corner_radius=10)
-    mainframe.pack()
-
-    titlebar = ctk.CTkFrame(mainframe,
-                            height=25,
-                            fg_color='#1f6aa5',
-                            corner_radius=5)
-    titlebar.pack_propagate(False)
-    titlebar.pack(fill='x', pady=(5, 0), padx=5)
-    titlebarify(titlebar, window, True)
-
-    close = ctk.CTkButton(titlebar,
-                          height=20,
-                          width=15,
-                          corner_radius=5,
-                          fg_color='#002037',
-                          text='Close',
-                          font=("", 10),
-                          command=window.withdraw)
-    close.pack(side='right', padx=2)
-
-    return window, mainframe, titlebar
+        print(f"Error processing create_subwindow: {e}\n")
 
 settings_window = None
 def open_settings():
@@ -219,8 +287,6 @@ def open_settings():
                 if old_key:
                     try:
                         app.unbind_all(f"<{old_key}>")
-                        app.unbind_all(f"<Key-{old_key}>")  # Try alternative form
-                        app.unbind_all(old_key)  # Try raw keysym
                     except Exception as e:
                         print(f"Error unbinding old key {old_key}: {e}")
                 
@@ -238,24 +304,23 @@ def open_settings():
             try:
                 new_value = event.widget.get().strip()
                 if new_value.isdigit() and int(new_value) > 0:
-                    settings[order_cooldown] = int(new_value)
-                    print(f"Cooldown updated to: {settings[order_cooldown]}ms")
-                    save_settings()
+                    settings["order_cooldown"] = int(new_value)
+                    print(f"Cooldown updated to: {settings['order_cooldown']}ms")
                 else:
                     print("Invalid cooldown: Must be a positive integer.")
                     event.widget.delete(0, "end")
-                    event.widget.insert(0, str(settings[order_cooldown]))
+                    event.widget.insert(0, str(settings["order_cooldown"]))
             except Exception as e:
                 print(f"Error updating cooldown: {e}")
                 event.widget.delete(0, "end")
-                event.widget.insert(0, str(settings[order_cooldown]))
+                event.widget.insert(0, str(settings["order_cooldown"]))
 
         if settings_window is not None and settings_window.winfo_exists():
             settings_window.lift()
             settings_window.focus_force()
             return
 
-        window, mainframe, titlebar = create_subwindow(geometry=f"+{screen_w - 225}+{screen_h//10}")
+        window, mainframe, titlebar = create_subwindow("settings_window_location")
 
         grid = ctk.CTkFrame(mainframe, corner_radius=5)
         grid.pack(pady=5, padx=5)
@@ -316,7 +381,7 @@ def open_settings():
                                      border_width=1,
                                      corner_radius=2,
                                      font=("", 15, 'bold'))
-        CooldownValue.insert(0, str(settings[order_cooldown]))
+        CooldownValue.insert(0, str(settings["order_cooldown"]))
         CooldownValue.grid(row=4, column=1, pady=5, padx=5)
         CooldownValue.bind("<FocusOut>", update_cooldown)
 
@@ -340,7 +405,7 @@ def open_info():
             info_window.focus_force()
             return
 
-        window, mainframe, titlebar = create_subwindow("+0+0")
+        window, mainframe, titlebar = create_subwindow("info_window_location")
 
         versionlabel = ctk.CTkLabel(mainframe,
                                     anchor="center",
@@ -371,16 +436,16 @@ def open_info():
     except Exception as e:
         print(f"Error processing open_info: {e}\n")
 
-evil_solutions_windows = None
+evil_solutions_window = None
 def open_evil_solutions():
     try:
-        global evil_solutions_windows
-        if evil_solutions_windows is not None and evil_solutions_windows.winfo_exists():
-            evil_solutions_windows.lift()
-            evil_solutions_windows.focus_force()
+        global evil_solutions_window
+        if evil_solutions_window is not None and evil_solutions_window.winfo_exists():
+            evil_solutions_window.lift()
+            evil_solutions_window.focus_force()
             return
 
-        window, mainframe, titlebar = create_subwindow(f"+0+{screen_h//3}")
+        window, mainframe, titlebar = create_subwindow("evil_solutions_window_location")
 
         evillabel = ctk.CTkLabel(mainframe,
                                  width=100,
@@ -397,7 +462,7 @@ def open_evil_solutions():
         label.pack(padx=5)
 
         window.withdraw()
-        evil_solutions_windows = window
+        evil_solutions_window = window
 
     except Exception as e:
         print(f"Error processing open_evil_solutions: {e}\n")
@@ -425,7 +490,7 @@ class ConsoleWindow:
             self.window.attributes("-toolwindow", True)
             self.window.attributes('-topmost', True)
             self.window.overrideredirect(True)
-            self.window.geometry(f"+{screen_w-550}+{screen_h-670}")
+            self.window.geometry(settings["console_window_location"])
             mainframe = ctk.CTkFrame(self.window,
                                     corner_radius=10,
                                     fg_color="#1a1a1a",
@@ -434,8 +499,7 @@ class ConsoleWindow:
             mainframe.pack_propagate(False)
             mainframe.pack(fill='both')
 
-
-            freedom_dive = ctk.CTkImage(light_image=Image.open(resource_path("images/freedomdive.png")),
+            freedom_dive = ctk.CTkImage(light_image=Image.open(resource_path("images/KuranteEUT.png")),
                                         size=(550, 300))
             freedom_image = ctk.CTkLabel(mainframe,
                                          text="",
@@ -449,7 +513,7 @@ class ConsoleWindow:
                                     background_corner_colors=('#97aabf', '#0d1121', '#465b2f', '#64975f'))
             titlebar.pack_propagate(False)
             titlebar.pack(fill='x', pady=5, padx=5)
-            titlebarify(titlebar, self.window, True)
+            titlebarify(titlebar, self.window, "console_window_location")
             titlebar.grid_columnconfigure(1, weight=1)
 
             clear = ctk.CTkButton(titlebar,
@@ -486,7 +550,7 @@ class ConsoleWindow:
                                       fg_color="#1a1a1a")
             pws.set_opacity(text_frame, value=0.9)
             text_frame.pack(pady=(0, 5), padx=5, fill='both', expand=True)
-            #tk.text required for errors colormapping
+            # tk.text is used for errors colormapping as ctk one doesn't support it if I am not dumb
             self.console_text = tk.Text(text_frame,
                                         wrap="word",
                                         height=15,
@@ -494,7 +558,7 @@ class ConsoleWindow:
                                         bg="#000000",
                                         fg="#ffffff",
                                         insertbackground="#ffffff",
-                                        font=("Calibri", 10, ""),
+                                        font=("Courier", 10, ""),
                                         bd=0,
                                         relief="flat")
             self.console_text.pack(fill='both', expand=True)
@@ -571,7 +635,8 @@ class ConsoleWindow:
             else:
                 self.window.withdraw()
 
-# change transparency of a window
+
+# controlling window transparency
 def change_transparency(value, window):
     try:
         window.attributes("-alpha", float(value))
@@ -581,7 +646,6 @@ def change_transparency(value, window):
 
 clickthroughlabel = None
 playback_live = False
-
 def order_playback(event=None, cooldown=None):
     global clickthroughlabel, playback_live, hwnd
     after_id = None
@@ -602,7 +666,7 @@ def order_playback(event=None, cooldown=None):
             order_window.update_idletasks()
 
             if cooldown is None:
-                cooldown = settings[order_cooldown]
+                cooldown = settings["order_cooldown"]
 
             # Enable clickthrough
             hwnd = windll.user32.GetForegroundWindow() # declare only once here!!!!!
@@ -666,7 +730,6 @@ def order_playback(event=None, cooldown=None):
         print(f"Error processing order_playback: {e}")
 
 
-
 labels = []
 order_window = None
 def open_order():
@@ -678,7 +741,7 @@ def open_order():
             order_window.focus_force()
             return
 
-        window, mainframe, titlebar = create_subwindow(f"+{screen_w//3+130}+{screen_h//40}")
+        window, mainframe, titlebar = create_subwindow("order_window_location")
 
         frame = ctk.CTkFrame(mainframe, fg_color='transparent')
         frame.pack(padx=5, pady=5)
@@ -689,8 +752,6 @@ def open_order():
             row_labels = []
             for j in range(5):
                 label = ctk.CTkLabel(grid,
-                                     width=72,
-                                     height=72,
                                      justify="center",
                                      text="",
                                      fg_color="#025c9d",
@@ -698,6 +759,13 @@ def open_order():
                 label.grid(row=i, column=j, padx=1, pady=1, sticky='nsew')
                 row_labels.append(label)
             labels.append(row_labels)
+
+        cell_size = (settings["order_window_size"] - 20) // 5
+        for row in labels:
+            for label in row:
+                label.configure(width=cell_size,
+                                height=cell_size,
+                                font=("", max(12, cell_size // 4), "bold"))
 
         transparency_slider = ctk.CTkSlider(mainframe,
                                             width=200,
@@ -736,7 +804,7 @@ def open_order():
             delta_x = event.x_root - window.resizeStartX
             new_w = max(200, window.startWidth + delta_x)
             new_h = max(350, new_w + 90)
-            window.geometry(f"{int(new_w)}x{int(new_h)}")
+            settings["order_window_size"] = new_w
             mainframe.configure(width=int(new_w), height=int(new_h))
             cell_size = (new_w - 20) // 5
             for row in labels:
@@ -765,7 +833,7 @@ def open_puzzle4():
             puzzle4_window.focus_force()
             return
 
-        window, mainframe, titlebar = create_subwindow(f"+{screen_w//3}+{screen_h//2.1}")
+        window, mainframe, titlebar = create_subwindow("puzzle4_window_location")
 
         frame = ctk.CTkFrame(mainframe, fg_color='transparent')
         frame.pack()
@@ -836,11 +904,11 @@ def hatch_puzzle(event=None):
                 data = str(entries[i][j].get()).strip()
                 values.append(data)
                 if not checkstop:
-                    if " " in data or "t" in data:
-                        puzzle = 3
-                        checkstop = True
-                    elif '+' in data or len(data) > 3:
+                    if any(x in data for x in ['^', '+', '/']):
                         puzzle = 4
+                        checkstop = True
+                    elif " " in data or "t" in data:
+                        puzzle = 3
                         checkstop = True
 
         print(f"Entries: {values}")
@@ -970,6 +1038,7 @@ math.round = luau_round
 
 def formula_translation(n):
     replacements = {
+        ' ': '',
         '^': '**',
         'p': '3.14',
         'r(': 'math.round(',
@@ -1129,7 +1198,7 @@ def resize_window(button):
             button.configure(text="> <")
             expanded = True
         else:
-            app.geometry(f"545x{app_height}+{screen_w//2-8-545//2}+{current_y}")
+            app.geometry(f"545x{app_height}+{screen_w//3}+{current_y}")
             button.configure(text="< >")
             expanded = False
     except Exception as e:
@@ -1175,8 +1244,8 @@ inputlabel = ctk.CTkLabel(grid0,
 inputlabel.grid(row=0, column=0, columnspan=6)
 
 pin_button = ctk.CTkButton(grid0,
-                           width=40,
-                           height=20,
+                           height=25,
+                           width=0,
                            text="Pin",
                            font=("", 15, "bold"),
                            command=lambda: pin_window(app, pin_button))
@@ -1184,32 +1253,33 @@ pin_button.grid(row=0, column=0, sticky='w')
 
 settings_icon = ctk.CTkImage(light_image=Image.open(resource_path("images/settings.png")), size=(15, 15))
 settings_button = ctk.CTkButton(grid0,
-                                width=20,
-                                height=20, text="",
+                                height=25,
+                                width=0,
+                                text="",
                                 image=settings_icon,
                                 command=lambda: toggle_window(settings_window))
 settings_button.grid(row=0, column=1, sticky='w', padx=5)
 
 info_button = ctk.CTkButton(grid0,
-                            width=20,
-                            height=20,
-                            text="?",
+                            height=25,
+                            width=0,
+                            text="HELP",
                             font=("", 13, "bold"),
                             command=lambda: toggle_window(info_window))
 info_button.grid(row=0, column=2, sticky='w')
 
 evil_info_button = ctk.CTkButton(grid0,
-                                 width=20,
-                                 height=20,
+                                 height=25,
+                                 width=0,
                                  text="?",
                                  font=("", 13, "bold"),
                                  text_color='#ff0000',
-                                 command=lambda: toggle_window(evil_solutions_windows))
+                                 command=lambda: toggle_window(evil_solutions_window))
 evil_info_button.grid(row=0, column=3, sticky='w', padx=(5, 0))
 
 resize_button = ctk.CTkButton(grid0,
-                              width=40, 
-                              height=20,
+                              width=0, 
+                              height=25,
                               text='< >',
                               font=("", 16, "bold"),
                               command=lambda: resize_window(resize_button))
@@ -1217,8 +1287,8 @@ resize_button.grid(row=0, column=4, padx=5, sticky='e')
 
 console = ConsoleWindow(app)
 console_button = ctk.CTkButton(grid0,
-                               width=80,
-                               height=20,
+                               width=0,
+                               height=25,
                                text="Console",
                                font=("", 15, "bold"),
                                command=console.toggle)
@@ -1274,22 +1344,26 @@ solve_button = ctk.CTkButton(grid2,
                              command=hatch_puzzle)
 solve_button.grid(row=0, column=4, sticky='e')
 
-app.geometry(f"+{screen_w//2-app.winfo_width()-118}+{screen_h-app.winfo_height()-155}")
-
 # defaults
-order_cooldown = object()
 settings = {
     hatch_puzzle: "Return",
     clear_entries: "y",
     order_playback: "F1",
-    order_cooldown: 2000
+    "order_cooldown": 2000,
+    "main_window_location":           f"+{int(screen_w//3)}+{int(screen_h//1.49)}",
+    "main_window_size":               None,
+    "settings_window_location":       f"+{int(screen_w-225)}+{int(screen_h//10)}",
+    "info_window_location":           f"+0+0",
+    "evil_solutions_window_location": f"+0+{int(screen_h//2.85)}",
+    "console_window_location":        f"+{int(screen_w//1.4)}+{int(screen_h//2.55)}",
+    "order_window_location":          f"+{int(screen_w//2.55)}+{int(screen_h//98)}",
+    "order_window_size":              411,
+    "puzzle4_window_location":        f"+{int(screen_w//2.75)}+{int(screen_h//2.05)}"
 }
-
-for function, key in settings.items():
-    if isinstance(key, str):
-        app.bind_all(f"<{key}>", function)
-
 load_settings()
+app.geometry(settings["main_window_location"])
+if settings["main_window_size"] != None:
+    app.geometry(settings["main_window_size"])
 
 # Preloading subwindows
 open_settings()
@@ -1298,17 +1372,13 @@ open_order()
 open_puzzle4()
 open_evil_solutions()
 
-def on_close():
-    save_settings()
-    app.destroy()
-
-app.protocol("WM_DELETE_WINDOW", on_close)
+app.update()
 
 # Keeping track of subwindows to minimize along side main window
 visible_subwindows = []
 subwindows = [settings_window,
               info_window,
-              evil_solutions_windows,
+              evil_solutions_window,
               order_window,
               puzzle4_window,
               console.window]
@@ -1320,17 +1390,25 @@ def on_minimize(event):
             if win and win.winfo_exists() and win.state() != 'withdrawn':
                 visible_subwindows.append(win)
                 win.withdraw()
-
 def on_restore(event):
     if event.widget == app:
         for win in visible_subwindows:
             if win and win.winfo_exists():
                 win.deiconify()
-
 app.bind('<Unmap>', on_minimize)
 app.bind('<Map>', on_restore)
 
-app.update()
+# Adjusting resize button if the app is already expanded from saved config
+if app.winfo_width() == screen_w:
+    expanded = True
+    resize_button.configure(text="> <")
+
 app_height = app.winfo_height()
+app_width = app.winfo_width()
+
+def on_close():
+    save_settings()
+    app.destroy()
+app.protocol("WM_DELETE_WINDOW", on_close)
 
 app.mainloop()
