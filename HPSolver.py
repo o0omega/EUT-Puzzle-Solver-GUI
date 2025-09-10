@@ -1,4 +1,4 @@
-Version = "1.6a"
+Version = "1.7"
 InfoText = """\
 Any app's window must be in focus 
 for settings to function.
@@ -1351,7 +1351,7 @@ settings = {
     order_playback: "F1",
     "order_cooldown": 2000,
     "main_window_location":           f"+{int(screen_w//3)}+{int(screen_h//1.49)}",
-    "main_window_size":               None,
+    "main_window_size":               "545x272",
     "settings_window_location":       f"+{int(screen_w-225)}+{int(screen_h//10)}",
     "info_window_location":           f"+0+0",
     "evil_solutions_window_location": f"+0+{int(screen_h//2.85)}",
@@ -1361,9 +1361,7 @@ settings = {
     "puzzle4_window_location":        f"+{int(screen_w//2.75)}+{int(screen_h//2.05)}"
 }
 load_settings()
-app.geometry(settings["main_window_location"])
-if settings["main_window_size"] != None:
-    app.geometry(settings["main_window_size"])
+app.geometry(settings["main_window_size"] + settings["main_window_location"])
 
 # Preloading subwindows
 open_settings()
