@@ -2,3 +2,4 @@ customtkinter
 keyboard
 pywinstyles
 sympy
+pillow

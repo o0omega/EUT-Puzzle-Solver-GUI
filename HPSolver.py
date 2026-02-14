@@ -1,8 +1,9 @@
-Version = "1.7"
+Version = "1.8"
 InfoText = """\
-Any app's window must be in focus 
+Any app's window must be in focus
 for settings to function.
-
+Order Playback enables click-through
+functionality for the order window
 For Puzzle #2 you can input numbers right away.
 For Puzzle #3 you can seperate the number and
 the base (the other number in ()) with a space
@@ -12,7 +13,6 @@ For Puzzle #4 you don't need to use spaces at all.
 Also, some questions are labeled as "evil" by the
 creator of the puzzle, so you can input their
 answers right away.
-
 Made by ozo (Discord @m6ga)
 Contributed by ltrc125 (@cat.0400)
 DM any bugs or suggestions, a forum post for the
@@ -27,15 +27,12 @@ The bottom red hint is the number in the end - 1
 The "1 + 1" is 11
 Answers can be input right away, but solving is
 also implemented
-
 Puzzle #4 syntax shortcuts
 c = math.ceil
 f = math.floor
 r = math.round
-p = π (or just 3.14)
+p = π (math.pi)
 """
-
-
 import customtkinter as ctk
 import tkinter as tk
 import sys, os
@@ -48,13 +45,11 @@ from re import sub
 import json
 import webbrowser
 
-
 # required for proper images compiling
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
-
 
 # Save config to a JSON file
 def save_settings():
@@ -79,9 +74,9 @@ def save_settings():
         with open("settings.json", "w") as f:
             json.dump(data, f, indent=4)
         print("Config saved.")
+
     except Exception as e:
         print(f"Error saving config: {e}")
-
 
 def load_settings():
     if not os.path.exists("settings.json"):
@@ -100,12 +95,14 @@ def load_settings():
         if new_solve != old_solve and new_solve != '??':
             settings[hatch_puzzle] = new_solve
             app.bind_all(f"<{new_solve}>", hatch_puzzle)
+
         # Clear
         old_clear = settings[clear_entries]
         new_clear = data.get("clear_entries", old_clear)
         if new_clear != old_clear and new_clear != '??':
             settings[clear_entries] = new_clear
             app.bind_all(f"<{new_clear}>", clear_entries)
+
         # Order playback
         old_playback = settings[order_playback]
         new_playback = data.get("order_playback", old_playback)
@@ -130,21 +127,25 @@ def load_settings():
         new_main_window_size = data.get("main_window_size", old_main_window_size)
         if new_main_window_size != old_main_window_size:
             settings["main_window_size"] = new_main_window_size
+
         # Settings
         old_settings_window_location = settings["settings_window_location"]
         new_settings_window_location = data.get("settings_window_location", old_settings_window_location)
         if new_settings_window_location != old_settings_window_location:
             settings["settings_window_location"] = new_settings_window_location
+
         # Info
         old_info_window_location = settings["info_window_location"]
         new_info_window_location = data.get("info_window_location", old_info_window_location)
         if new_info_window_location != old_info_window_location:
             settings["info_window_location"] = new_info_window_location
+
         # Evil Solutions
         old_evil_solutions_window_location = settings["evil_solutions_window_location"]
         new_evil_solutions_window_location = data.get("evil_solutions_window_location", old_evil_solutions_window_location)
         if new_evil_solutions_window_location != old_evil_solutions_window_location:
             settings["evil_solutions_window_location"] = new_evil_solutions_window_location
+
         # Order
         old_order_window_location = settings["order_window_location"]
         new_order_window_location = data.get("order_window_location", old_order_window_location)
@@ -154,20 +155,20 @@ def load_settings():
         new_order_window_size = data.get("order_window_size", old_order_window_size)
         if new_order_window_size != old_order_window_size:
             settings["order_window_size"] = new_order_window_size
+
         # Puzzle 4 Answers
         old_puzzle4_window_location = settings["puzzle4_window_location"]
         new_puzzle4_window_location = data.get("puzzle4_window_location", old_puzzle4_window_location)
         if new_puzzle4_window_location != old_puzzle4_window_location:
             settings["puzzle4_window_location"] = new_puzzle4_window_location
+
         # Console
         old_console_window_location = settings["console_window_location"]
         new_console_window_location = data.get("console_window_location", old_console_window_location)
         if new_console_window_location != old_console_window_location:
             settings["console_window_location"] = new_console_window_location
-
     except Exception as e:
         print(f"Error loading settings: {e}")
-
 
 # top window pinning utility
 def pin_window(window, button):
@@ -175,24 +176,21 @@ def pin_window(window, button):
         current_topmost = window.attributes('-topmost')
         window.attributes('-topmost', not current_topmost)
         button.configure(text="Unpin" if not current_topmost else "Pin")
+
     except Exception as e:
         print(f"Error processing pin_window: {e}")
-
 
 # allows for darkening any colour, mainly applied to widgets upon hovering as feedback
 def darken(widget, factor=0.8, bool=True):
     if bool:
         def on_enter(event):
             widget.configure(fg_color=f"#{darken_color}")
-
         def on_leave(event):
             widget.configure(fg_color=f"#{initial_color}")
-
     initial_color = widget.cget("fg_color").lstrip('#')
     rgb = tuple(int(initial_color[i:i + 2], 16) for i in (0, 2, 4))
     darken_rgb = tuple(max(0, min(255, int(c * factor))) for c in rgb)
     darken_color = '{:02x}{:02x}{:02x}'.format(*darken_rgb)
-
     widget.bind("<Enter>", on_enter)
     widget.bind("<Leave>", on_leave)
     return darken_color
@@ -202,28 +200,25 @@ def titlebarify(widget, window, location_key):
     try:
         initial_color = widget.cget("fg_color")
         darken_color = darken(widget)
-
         def start_move(event):
             window._offset_x = event.x_root - window.winfo_rootx()
             window._offset_y = event.y_root - window.winfo_rooty()
             widget.configure(fg_color=f"#{darken_color}")
-
         def do_move(event):
             new_x = event.x_root - window._offset_x
             new_y = event.y_root - window._offset_y
             window.geometry(f"+{new_x}+{new_y}")
-
         def stop_move(event):
             widget.configure(fg_color=initial_color)
-            settings[location_key] = f"+{int(window.winfo_x())}+{int(window.winfo_y())}"
-
+            settings[location_key] = f"+{int(window.winfo_x())} +{int(window.winfo_y())}"
         widget.bind("<Button-1>", start_move)
         widget.bind("<B1-Motion>", do_move)
         widget.bind("<ButtonRelease-1>", stop_move)
+
     except Exception as e:
         print(f"Error processing titlebarify: {e}\n")
 
-
+# subwindow template
 def create_subwindow(location_key):
     try:
         window = ctk.CTkToplevel(app)
@@ -256,83 +251,147 @@ def create_subwindow(location_key):
         close.pack(side='right', padx=2)
 
         return window, mainframe, titlebar
+    
     except Exception as e:
         print(f"Error processing create_subwindow: {e}\n")
 
 settings_window = None
+OrderSizeValue = None
 def open_settings():
     try:
         global settings_window, settings
 
         def hatch_bind(button, function):
-            blacklist = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '!', '@', '#', '$', '%', '^', '&', '*', '(',
-                        ')', '-', '+', '.', ',', '/', 'm', 'a', 't', 'h', 'r', 'o', 'u', 'n', 'd', 'c', 'e', 'i', 'l', 'f', 's', 'p', "Tab", "Escape"]
+            blacklist = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '.', ',', '/', 'm', 'a', 't', 'h', 'r', 'o', 'u', 'n', 'd', 'c', 'e', 'i', 'l', 'f', 's', 'p', "Tab", "Escape"]
             button.configure(text="Press a Key", fg_color='#144870')
-
             def on_key_press(event):
                 if not event.keysym.isascii():
                     print("Invalid keybind: Non-ASCII key detected.")
                     return
-
                 key = event.keysym
                 # Normalizing
                 key = key.upper() if key.lower() in [f'f{i}' for i in range(1, 13)] else key
                 if key in blacklist:
                     print(f"Invalid keybind: {key}.\nFollowing keys are reserved:\n{blacklist}.")
                     return
-
                 button.configure(text=key, fg_color='#1f6aa5')
-                
+               
                 old_key = settings.get(function)
                 if old_key:
                     try:
                         app.unbind_all(f"<{old_key}>")
                     except Exception as e:
                         print(f"Error unbinding old key {old_key}: {e}")
-                
+               
                 # Update settings and bind new key
                 settings[function] = key
                 app.bind_all(f"<{key}>", function)
                 print(f"{function.__name__} keybind changed to:", key)
-
                 settings_window.unbind("<Any-KeyPress>")
-
             settings_window.bind("<Any-KeyPress>", on_key_press)
             settings_window.focus_force()
 
         def update_cooldown(event):
             try:
                 new_value = event.widget.get().strip()
-                if new_value.isdigit() and int(new_value) > 0:
+                if int(new_value) == int(settings['order_cooldown']):
+                    pass
+                elif new_value.isdigit() and int(new_value) > 0:
                     settings["order_cooldown"] = int(new_value)
                     print(f"Cooldown updated to: {settings['order_cooldown']}ms")
                 else:
                     print("Invalid cooldown: Must be a positive integer.")
                     event.widget.delete(0, "end")
                     event.widget.insert(0, str(settings["order_cooldown"]))
+                focus_out(event)
+
             except Exception as e:
                 print(f"Error updating cooldown: {e}")
                 event.widget.delete(0, "end")
                 event.widget.insert(0, str(settings["order_cooldown"]))
 
+        def update_order_window_size(event):
+            try:
+                global screen_h
+                new_value = event.widget.get().strip()
+                if int(new_value) == int(settings["order_window_size"]):
+                    pass
+                elif new_value.isdigit() and int(new_value) >= 200 and int(new_value) <= int(screen_h * 0.9):
+                    new_w = int(new_value)
+                    settings["order_window_size"] = new_w
+                    new_h = new_w + 90
+                    order_window.geometry(f"{new_w}x{new_h}")
+                    cell_size = (new_w - 20) // 5
+                    for row in labels:
+                        for label in row:
+                            label.configure(width=cell_size,
+                                            height=cell_size,
+                                            font=("", max(12, cell_size // 4), "bold"))
+                    print(f"Order window size set to: {new_w}")
+                else:
+                    print(f"Invalid window size: Must be an integet >= 200 and <= {int(screen_h * 0.9)}")
+                    event.widget.delete(0, "end")
+                    event.widget.insert(0, settings["order_window_size"])
+                focus_out(event)
+
+            except Exception as e:
+                print(f"Error updating order window size: {e}")
+                event.widget.delete(0, "end")
+                event.widget.insert(0, settings["order_window_size"])
+
+        def reset_defaults(event=None):
+            try:
+                global settings
+                for fn in (hatch_puzzle, clear_entries, order_playback):
+                    old = settings.get(fn)
+                    if old:
+                        app.unbind_all(f"<{old}>")
+                settings = DEFAULT_SETTINGS.copy()
+                app.bind_all(f"<{settings[hatch_puzzle]}>", hatch_puzzle)
+                app.bind_all(f"<{settings[clear_entries]}>", clear_entries)
+                app.bind_all(f"<{settings[order_playback]}>", order_playback)
+                SolveBind.configure(text=settings[hatch_puzzle])
+                ClearBind.configure(text=settings[clear_entries])
+                PlaybackBind.configure(text=settings[order_playback])
+                CooldownValue.delete(0, "end")
+                CooldownValue.insert(0, str(settings["order_cooldown"]))
+                OrderSizeValue.delete(0, "end")
+                OrderSizeValue.insert(0, str(settings["order_window_size"]))
+                if order_window and order_window.winfo_exists():
+                    new_w = settings["order_window_size"]
+                    new_h = new_w + 90
+                    order_window.geometry(f"{new_w}x{new_h}")
+                app.geometry(settings["main_window_size"] + settings["main_window_location"])
+                save_settings()
+                print("Settings reset to defaults.")
+
+            except Exception as e:
+                print(f"Error resetting defaults: {e}")
+
         if settings_window is not None and settings_window.winfo_exists():
             settings_window.lift()
             settings_window.focus_force()
             return
-
+        
         window, mainframe, titlebar = create_subwindow("settings_window_location")
-
         grid = ctk.CTkFrame(mainframe, corner_radius=5)
         grid.pack(pady=5, padx=5)
         grid.columnconfigure(1, weight=1)
+
         SettingsLabel = ctk.CTkLabel(grid,
                                      text="Settings",
                                      font=("", 20, "bold"))
         SettingsLabel.grid(row=0, columnspan=2)
-        Solve = ctk.CTkLabel(grid,
-                             text="Solve:",
-                             font=("", 15))
-        Solve.grid(row=1, column=0, pady=5, padx=5, sticky="w")
+
+        TabLabel = ctk.CTkLabel(grid,
+                                text="Focus Next Entry = <Tab>\nPrevious Entry = <Shift> + <Tab>",
+                                font=("", 15))
+        TabLabel.grid(row=1, column=0, columnspan=2, pady=5, padx=5)
+
+        SolveLabel = ctk.CTkLabel(grid,
+                                  text="Solve:",
+                                  font=("", 15))
+        SolveLabel.grid(row=2, column=0, pady=5, padx=5, sticky="w")
         SolveBind = ctk.CTkButton(grid,
                                   width=90,
                                   height=30,
@@ -340,12 +399,12 @@ def open_settings():
                                   corner_radius=2,
                                   text=settings[hatch_puzzle],
                                   font=("", 15, 'bold'), command=lambda: hatch_bind(SolveBind, hatch_puzzle))
-        SolveBind.grid(row=1, column=1, pady=5, padx=5)
+        SolveBind.grid(row=2, column=1, pady=5, padx=5)
 
-        Clear = ctk.CTkLabel(grid,
-                             text="Clear:",
-                             font=("", 15))
-        Clear.grid(row=2, column=0, pady=5, padx=5, sticky="w")
+        ClearLabel = ctk.CTkLabel(grid,
+                                  text="Clear:",
+                                  font=("", 15))
+        ClearLabel.grid(row=3, column=0, pady=5, padx=5, sticky="w")
         ClearBind = ctk.CTkButton(grid,
                                   width=90,
                                   height=30,
@@ -354,12 +413,12 @@ def open_settings():
                                   text=settings[clear_entries],
                                   font=("", 15, 'bold'),
                                   command=lambda: hatch_bind(ClearBind, clear_entries))
-        ClearBind.grid(row=2, column=1, pady=5, padx=5)
+        ClearBind.grid(row=3, column=1, pady=5, padx=5)
 
-        Playback = ctk.CTkLabel(grid,
-                                text="Order Playback:",
-                                font=("", 15))
-        Playback.grid(row=3, column=0, pady=5, padx=5, sticky="w")
+        PlaybackLabel = ctk.CTkLabel(grid,
+                                     text="Order Playback:",
+                                     font=("", 15))
+        PlaybackLabel.grid(row=4, column=0, pady=5, padx=5, sticky="w")
         PlaybackBind = ctk.CTkButton(grid,
                                      width=90,
                                      height=30,
@@ -368,27 +427,52 @@ def open_settings():
                                      text=settings[order_playback],
                                      font=("", 15, 'bold'),
                                      command=lambda: hatch_bind(PlaybackBind, order_playback))
-        PlaybackBind.grid(row=3, column=1, pady=5, padx=5)
+        PlaybackBind.grid(row=4, column=1, pady=5, padx=5)
 
-        Cooldown = ctk.CTkLabel(grid,
-                                text="Cooldown (ms):",
-                                font=("", 15))
-        Cooldown.grid(row=4, column=0, pady=5, padx=5, sticky="w")
+        CooldownLabel = ctk.CTkLabel(grid,
+                                     text="Cooldown (ms):",
+                                     font=("", 15))
+        CooldownLabel.grid(row=5, column=0, pady=5, padx=5, sticky="w")
         CooldownValue = ctk.CTkEntry(grid,
                                      justify="center",
                                      width=90,
                                      height=30,
                                      border_width=1,
+                                     border_color="#acacac",
                                      corner_radius=2,
                                      font=("", 15, 'bold'))
         CooldownValue.insert(0, str(settings["order_cooldown"]))
-        CooldownValue.grid(row=4, column=1, pady=5, padx=5)
+        CooldownValue.grid(row=5, column=1, pady=5, padx=5)
+        CooldownValue.bind("<FocusIn>", focus_in)
         CooldownValue.bind("<FocusOut>", update_cooldown)
 
-        TabLabel = ctk.CTkLabel(grid,
-                                text="Focus Next Entry = Tab\nPrevious Entry = Shift+Tab",
-                                font=("", 15))
-        TabLabel.grid(row=5, column=0, columnspan=2, pady=5)
+        OrderSizeLabel = ctk.CTkLabel(grid,
+                                      text="Order Window Size:",
+                                      font=("", 15))
+        OrderSizeLabel.grid(row=6, column=0, pady=5, padx=5, sticky="w")
+        global OrderSizeValue
+        OrderSizeValue = ctk.CTkEntry(grid,
+                                      justify="center",
+                                      width=90,
+                                      height=30,
+                                      border_width=1,
+                                      border_color="#acacac",
+                                      corner_radius=2,
+                                      font=("", 15, "bold"))
+        OrderSizeValue.insert(0, str(settings["order_window_size"]))
+        OrderSizeValue.grid(row=6, column=1, pady=5, padx=5)
+        OrderSizeValue.bind("<FocusIn>", focus_in)
+        OrderSizeValue.bind("<FocusOut>", update_order_window_size)
+
+        ResetDefaults = ctk.CTkButton(grid,
+                                      width=230,
+                                      height=30,
+                                      border_width=1,
+                                      corner_radius=2,
+                                      text="Reset To Defaults",
+                                      font=("", 15, 'bold'),
+                                      command=reset_defaults)
+        ResetDefaults.grid(row=7, column=0, columnspan=2, pady=5, padx=5)
 
         window.withdraw()
         settings_window = window
@@ -404,7 +488,6 @@ def open_info():
             info_window.lift()
             info_window.focus_force()
             return
-
         window, mainframe, titlebar = create_subwindow("info_window_location")
 
         versionlabel = ctk.CTkLabel(mainframe,
@@ -419,6 +502,7 @@ def open_info():
                              font=("", 15),
                              justify="left")
         label.pack(padx=5)
+
         DiscordLabel = ctk.CTkLabel(mainframe,
                              text="Everything Upgrade Tree Discord",
                              font=("", 18, "bold"),
@@ -430,6 +514,16 @@ def open_info():
         DiscordLabel.bind("<Leave>", lambda e: DiscordLabel.configure(font=("", 18, "bold")))
         DiscordLabel.bind("<Button-1>", lambda e: (webbrowser.open("https://discord.gg/eut"), app.iconify()))
 
+        ForumPostLabel = ctk.CTkLabel(mainframe,
+                             text="Forum Post Link",
+                             font=("", 18, "bold"),
+                             anchor="center",
+                             text_color="#6ab7ff",
+                             cursor="hand2")
+        ForumPostLabel.pack(padx=5, pady=(0, 2))
+        ForumPostLabel.bind("<Enter>", lambda e: ForumPostLabel.configure(font=("", 18, "underline")))
+        ForumPostLabel.bind("<Leave>", lambda e: ForumPostLabel.configure(font=("", 18, "bold")))
+        ForumPostLabel.bind("<Button-1>", lambda e: (webbrowser.open("https://discord.com/channels/1300785642954817589/1349881040201842688"), app.iconify()))
         window.withdraw()
         info_window = window
 
@@ -444,7 +538,6 @@ def open_evil_solutions():
             evil_solutions_window.lift()
             evil_solutions_window.focus_force()
             return
-
         window, mainframe, titlebar = create_subwindow("evil_solutions_window_location")
 
         evillabel = ctk.CTkLabel(mainframe,
@@ -460,13 +553,13 @@ def open_evil_solutions():
                              justify="left",
                              width=280)
         label.pack(padx=5)
-
         window.withdraw()
         evil_solutions_window = window
 
     except Exception as e:
         print(f"Error processing open_evil_solutions: {e}\n")
 
+# Class is used as I couldn't find a class-less solution for properly redirecting console output to the app
 class ConsoleWindow:
     def __init__(self, master):
         self.master = master
@@ -491,6 +584,7 @@ class ConsoleWindow:
             self.window.attributes('-topmost', True)
             self.window.overrideredirect(True)
             self.window.geometry(settings["console_window_location"])
+
             mainframe = ctk.CTkFrame(self.window,
                                     corner_radius=10,
                                     fg_color="#1a1a1a",
@@ -550,6 +644,7 @@ class ConsoleWindow:
                                       fg_color="#1a1a1a")
             pws.set_opacity(text_frame, value=0.9)
             text_frame.pack(pady=(0, 5), padx=5, fill='both', expand=True)
+
             # tk.text is used for errors colormapping as ctk one doesn't support it if I am not dumb
             self.console_text = tk.Text(text_frame,
                                         wrap="word",
@@ -565,7 +660,6 @@ class ConsoleWindow:
             # error text
             self.console_text.tag_configure("error", foreground="#ff5959")
             self.console_text.config(state='disabled')
-
             self.window.withdraw()
 
         except Exception as e:
@@ -575,7 +669,6 @@ class ConsoleWindow:
     class NullOutput:
         def write(self, text):
             pass
-
         def flush(self):
             pass
 
@@ -585,9 +678,9 @@ class ConsoleWindow:
                 sys.stdout = self.NullOutput()
             if sys.stderr is None:
                 sys.stderr = self.NullOutput()
-
             sys.stdout.write = self.write_console
             sys.stderr.write = self.write_console
+
         except Exception as e:
             with open("console_error.log", "a") as f:
                 f.write(f"Error setting up redirection: {e}\n")
@@ -602,9 +695,9 @@ class ConsoleWindow:
                 self.console_text.see("end")
                 self.console_text.config(state='disabled')
                 self.console_text.update()
-
             with open("output.log", "a") as f:
                 f.write(f"{text}")
+
         except Exception as e:
             with open("console_error.log", "a") as f:
                 f.write(f"Error in write_console: {e}\n")
@@ -615,6 +708,7 @@ class ConsoleWindow:
                 self.console_text.config(state='normal')
                 self.console_text.delete("1.0", "end")
                 self.console_text.config(state='disabled')
+
         except Exception as e:
             self.write_console(f"Error processing clear_console: {e}\n")
 
@@ -624,6 +718,7 @@ class ConsoleWindow:
                 text = self.console_text.get("1.0", "end-1c")
                 app.clipboard_clear()
                 app.clipboard_append(text)
+
         except Exception as e:
             self.write_console(f"Error processing copy_console: {e}\n")
 
@@ -635,36 +730,33 @@ class ConsoleWindow:
             else:
                 self.window.withdraw()
 
-
 # controlling window transparency
 def change_transparency(value, window):
     try:
         window.attributes("-alpha", float(value))
+
     except Exception as e:
         print(f"Error processing change_transparency: {e}")
-
 
 clickthroughlabel = None
 playback_live = False
 def order_playback(event=None, cooldown=None):
     global clickthroughlabel, playback_live, hwnd
     after_id = None
-
     try:
         if order_window is None or not order_window.winfo_exists() or order_window.state() == 'withdrawn':
             print("Order window is not open. Open the Order window to enable playback.")
             return
-
+        
         if order is None or not order:
             print("No order available. Solve a puzzle first.")
             return
-
+        
         if not playback_live:
             playback_live = True
             order_window.lift()
             order_window.focus_force()
             order_window.update_idletasks()
-
             if cooldown is None:
                 cooldown = settings["order_cooldown"]
 
@@ -673,7 +765,6 @@ def order_playback(event=None, cooldown=None):
             style = windll.user32.GetWindowLongW(hwnd, -20)  # GWL_EXSTYLE = -20
             windll.user32.SetWindowLongW(hwnd, -20, style | 0x00000020)  # WS_EX_TRANSPARENT
             clickthroughlabel.configure(text="Clickthrough Enabled", text_color="#50ff6d")
-
             label_order = []
             for i in range(5):
                 for j in range(5):
@@ -687,6 +778,7 @@ def order_playback(event=None, cooldown=None):
                 nonlocal after_id, label_order, cooldown
                 if not playback_live:
                     return
+                
                 if idx >= len(label_order):
                     style = windll.user32.GetWindowLongW(hwnd, -20)
                     windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # Remove WS_EX_TRANSPARENT
@@ -696,7 +788,7 @@ def order_playback(event=None, cooldown=None):
                     after_id = None
                     print("Playback completed.")
                     return
-
+                
                 order_num, label = label_order[idx]
                 original_color = label.cget("fg_color")
                 label.configure(fg_color="#cc00ff")
@@ -705,7 +797,7 @@ def order_playback(event=None, cooldown=None):
                     nonlocal after_id
                     label.configure(fg_color=original_color)
                     highlight_sequence(idx + 1)
-
+                
                 after_id = app.after(cooldown, unhighlight_and_next)
 
             highlight_sequence(0)
@@ -715,11 +807,9 @@ def order_playback(event=None, cooldown=None):
             if after_id is not None:
                 app.after_cancel(after_id)
                 after_id = None
-
             for i in range(5):
                 for j in range(5):
                     labels[i][j].configure(fg_color="#025c9d")
-
             style = windll.user32.GetWindowLongW(hwnd, -20)
             windll.user32.SetWindowLongW(hwnd, -20, style & ~0x00000020)  # Remove WS_EX_TRANSPARENT
             clickthroughlabel.configure(text="Clickthrough Disabled", text_color='#ffa8a8')
@@ -729,25 +819,24 @@ def order_playback(event=None, cooldown=None):
     except Exception as e:
         print(f"Error processing order_playback: {e}")
 
-
 labels = []
 order_window = None
 def open_order():
     try:
         global order_window, clickthroughlabel, labels
-
         if order_window is not None and order_window.winfo_exists():
             order_window.lift()
             order_window.focus_force()
             return
-
         window, mainframe, titlebar = create_subwindow("order_window_location")
-
+       
         frame = ctk.CTkFrame(mainframe, fg_color='transparent')
         frame.pack(padx=5, pady=5)
-
+       
         grid = ctk.CTkFrame(frame)
         grid.pack()
+       
+        labels = []
         for i in range(5):
             row_labels = []
             for j in range(5):
@@ -759,14 +848,14 @@ def open_order():
                 label.grid(row=i, column=j, padx=1, pady=1, sticky='nsew')
                 row_labels.append(label)
             labels.append(row_labels)
-
+       
         cell_size = (settings["order_window_size"] - 20) // 5
         for row in labels:
             for label in row:
                 label.configure(width=cell_size,
                                 height=cell_size,
                                 font=("", max(12, cell_size // 4), "bold"))
-
+       
         transparency_slider = ctk.CTkSlider(mainframe,
                                             width=200,
                                             height=5,
@@ -777,14 +866,14 @@ def open_order():
         window.attributes("-alpha", 0.73)
         transparency_slider.set(0.7)
         transparency_slider.pack(pady=(10, 5))
-
+       
         clickthroughlabel = ctk.CTkLabel(mainframe, text="Clickthrough disabled", text_color='#ffa8a8')
         clickthroughlabel.pack(pady=(0, 10))
-
+       
         resize_button = ctk.CTkButton(mainframe,
                                       width=20,
                                       height=20,
-                                      text=">",
+                                      text="➘",
                                       font=("", 12, "bold"),
                                       fg_color="#006ec9",
                                       hover_color="#0080ff",
@@ -792,33 +881,95 @@ def open_order():
                                       corner_radius=2,
                                       cursor="size_nw_se")
         resize_button.place(relx=1.0, rely=1.0, anchor='se', x=-5, y=-5)
-
-        # Resize event bindings
-        def start_resize(event):
-            window.resizeStartX = event.x_root
-            window.resizeStartY = event.y_root
-            window.startWidth = window.winfo_width()
-            window.startHeight = window.winfo_height()
-
-        def stop_resize(event):
-            delta_x = event.x_root - window.resizeStartX
-            new_w = max(200, window.startWidth + delta_x)
-            new_h = max(350, new_w + 90)
-            settings["order_window_size"] = new_w
-            mainframe.configure(width=int(new_w), height=int(new_h))
-            cell_size = (new_w - 20) // 5
+       
+        resize_start_x = None
+        resize_start_y = None
+        resize_start_w = None
+       
+        def on_resize_press(event):
+            nonlocal resize_start_x, resize_start_y, resize_start_w
+            resize_start_x = event.x_root
+            resize_start_y = event.y_root
+            resize_start_w = window.winfo_width()
+       
+        def on_resize_drag(event):
+            nonlocal resize_start_x, resize_start_y, resize_start_w
+            if resize_start_x is None:
+                return
+           
+            delta_x = event.x_root - resize_start_x
+            new_width = max(200, resize_start_w + delta_x)
+           
+            max_allowed = int(screen_h * 0.9)
+            new_width = min(new_width, max_allowed)
+           
+            new_height = new_width + 90
+           
+            window.geometry(f"{new_width}x{new_height}")
+           
+            cell_size = (new_width - 20) // 5
             for row in labels:
                 for label in row:
                     label.configure(width=cell_size,
                                     height=cell_size,
                                     font=("", max(12, cell_size // 4), "bold"))
-
-        resize_button.bind("<Button-1>", start_resize)
-        resize_button.bind("<ButtonRelease-1>", stop_resize)
-
+           
+            try:
+                if OrderSizeValue is not None and OrderSizeValue.winfo_exists():
+                    OrderSizeValue.delete(0, "end")
+                    OrderSizeValue.insert(0, str(new_width))
+            except:
+                pass
+           
+            settings["order_window_size"] = new_width
+       
+        def on_resize_release(event):
+            nonlocal resize_start_x, resize_start_y
+            resize_start_x = None
+            resize_start_y = None
+       
+        resize_button.bind("<Button-1>", on_resize_press)
+        resize_button.bind("<B1-Motion>", on_resize_drag)
+        resize_button.bind("<ButtonRelease-1>", on_resize_release)
+       
+        def on_window_configure(event):
+            if event.widget != window:
+                return
+           
+            current_w = event.width
+            current_h = event.height
+           
+            if abs(current_w - settings["order_window_size"]) < 5:
+                return
+           
+            clamped_w = max(200, min(current_w, int(screen_h * 0.9)))
+           
+            if clamped_w != current_w:
+                new_h = clamped_w + 90
+                window.geometry(f"{clamped_w}x{new_h}")
+                return
+           
+            settings["order_window_size"] = clamped_w
+           
+            try:
+                if OrderSizeValue is not None and OrderSizeValue.winfo_exists():
+                    OrderSizeValue.delete(0, "end")
+                    OrderSizeValue.insert(0, str(clamped_w))
+            except:
+                pass
+           
+            cell_size = (clamped_w - 20) // 5
+            for row in labels:
+                for label in row:
+                    label.configure(width=cell_size,
+                                    height=cell_size,
+                                    font=("", max(12, cell_size // 4), "bold"))
+       
+        window.bind("<Configure>", on_window_configure)
+       
         window.withdraw()
         order_window = window
-
+       
     except Exception as e:
         print(f"Error processing open_order: {e}\n")
 
@@ -827,20 +978,15 @@ puzzle4_window = None
 def open_puzzle4():
     try:
         global puzzle4_window, puzzle4_labels
-
         if puzzle4_window is not None and puzzle4_window.winfo_exists():
             puzzle4_window.lift()
             puzzle4_window.focus_force()
             return
-
         window, mainframe, titlebar = create_subwindow("puzzle4_window_location")
-
         frame = ctk.CTkFrame(mainframe, fg_color='transparent')
         frame.pack()
-
         grid = ctk.CTkFrame(frame)
         grid.pack(padx=5, pady=5)
-
         for i in range(5):
             puzzle4_row_labels = []
             for j in range(5):
@@ -856,10 +1002,9 @@ def open_puzzle4():
                 label.bind("<Button-1>", copy_to_clipboard)
                 darken(label, factor=0.8, bool=True)
                 label._label.place(relwidth=1, relheight=1, relx=0, rely=0, anchor="nw")
-                
+               
                 puzzle4_row_labels.append(label)
             puzzle4_labels.append(puzzle4_row_labels)
-
         window.withdraw()
         puzzle4_window = window
 
@@ -898,21 +1043,18 @@ def hatch_puzzle(event=None):
         checkstop = False
         puzzle = 124
         error_detected = False
-
         for i in range(5):
             for j in range(5):
                 data = str(entries[i][j].get()).strip()
                 values.append(data)
                 if not checkstop:
-                    if any(x in data for x in ['^', '+', '/']):
+                    if any(x in data for x in ['+', '/', 'r(', 'f(', 'c(', 'p']):
                         puzzle = 4
                         checkstop = True
                     elif " " in data or "t" in data:
                         puzzle = 3
                         checkstop = True
-
         print(f"Entries: {values}")
-
         if puzzle == 4:
             print(f"Detected Puzzle #4 Answers")
             puzzle4(values)
@@ -922,7 +1064,6 @@ def hatch_puzzle(event=None):
         else:
             print(f"Detected Puzzle #1/#2/#4 Order")
             puzzle1_2(values)
-
         if error_detected:
             print("Please check highlighted cells for invalid inputs.")
 
@@ -950,18 +1091,14 @@ def puzzle1_2(values):
                     print(f"Error in cell {get_cell_number(i, j)}: Invalid number format '{num}'")
                     entries[i][j].configure(border_color="#ff0000")
                     error_detected = True
-
         values = [int(num.translate(replace)) if num != '' else '' for num in values]
         print(f"Converted: {values}")
-
         if error_detected:
             return
-
         non_zero_values = [value for value in values if value != '']
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
         ordered_values = [order.get(num, 0) for num in values]
         print(f"Order: {ordered_values}\n")
-
         if order_window is not None and order_window.winfo_exists():
             label_index = 0
             for i in range(5):
@@ -1000,17 +1137,13 @@ def puzzle3(values):
                     entries[i][j].configure(border_color="#ff0000")
                     error_detected = True
                     base10s.append(0)
-
         print(f"Base 10: {base10s}")
-
         if error_detected:
             return
-
         non_zero_values = [value for value in base10s if value != 0]
         order = {num: i + 1 for i, num in enumerate(sorted(non_zero_values))}
         ordered_values = [order.get(num, 0) for num in base10s]
         print(f"Order: {ordered_values}\n")
-
         if order_window is not None and order_window.winfo_exists():
             label_index = 0
             for i in range(5):
@@ -1038,9 +1171,9 @@ math.round = luau_round
 
 def formula_translation(n):
     replacements = {
-        ' ': '',
-        '^': '**',
-        'p': '3.14',
+        ' ' : '',
+        '^' : '**',
+        'p' : 'math.pi',
         'r(': 'math.round(',
         'f(': 'math.floor(',
         'c(': 'math.ceil(',
@@ -1112,24 +1245,21 @@ def puzzle4(values):
                     entries[i][j].configure(border_color="#ff0000")
                     error_detected = True
                     solutions.append('')
-
         print(f"Answers: {solutions}")
-
         if error_detected:
             return
-
         non_empty_solutions = [sol for sol in solutions if sol != '']
         order = {num: i + 1 for i, num in enumerate(sorted(non_empty_solutions))}
         ordered_values = [order.get(sol, 0) if sol != '' else '' for sol in solutions]
         print(f"Order: {ordered_values}\n")
-        
+       
         if order_window is not None and order_window.winfo_exists():
             label_index = 0
             for i in range(5):
                 for j in range(5):
                     labels[i][j].configure(text=str(ordered_values[label_index]) if ordered_values[label_index] != 0 else '')
                     label_index += 1
-        
+       
         if puzzle4_window is not None and puzzle4_window.winfo_exists():
             label_index = 0
             for i in range(5):
@@ -1149,6 +1279,7 @@ def limit_input(entry_text, max_length):
     try:
         valid_chars = set("qwertyuiopasdfghjklzxcvbnm0123456789!@#$%^&*()-+=,./ ")
         return (len(entry_text) <= int(max_length) and all(char in valid_chars for char in entry_text))
+    
     except Exception as e:
         print(f"Error processing limit_input: {e}")
 
@@ -1163,9 +1294,9 @@ def clear_entries(event=None):
                 puzzle4_labels[i][j].configure(text="")
         order = None
         print("Inputs Cleared")
+
     except Exception as e:
         print(f"Error processing clear_entries: {e}")
-
 
 # adjusting border color for focused entry window
 def focus_in(event):
@@ -1173,7 +1304,6 @@ def focus_in(event):
 
 def focus_out(event):
     event.widget.master.configure(border_color="#acacac")
-
 
 # right bracket auto addition
 def bracket_helper(event):
@@ -1183,10 +1313,9 @@ def bracket_helper(event):
         entry.insert(pos, "()")
         entry.icursor(pos + 1)
         return "break"
-
+    
     except Exception as e:
         print(f"Error processing handle_parenthesis: {e}")
-
 
 expanded = False
 def resize_window(button):
@@ -1201,12 +1330,14 @@ def resize_window(button):
             app.geometry(f"545x{app_height}+{screen_w//3}+{current_y}")
             button.configure(text="< >")
             expanded = False
+
     except Exception as e:
         print(f"Error processing resize_window: {e}")
 
-# force dark mode
+# attempt force dark mode
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
+
 # app initialization
 app = ctk.CTk()
 app.resizable(True, False)
@@ -1214,10 +1345,6 @@ app.minsize(545, 0)
 app.title("HPSolver")
 app.iconbitmap(resource_path(r"images\M.ico"))
 icon_path = resource_path(r"images\M.ico")
-
-screen_w = app.winfo_screenwidth()
-screen_h = app.winfo_screenheight()
-
 app.grid_columnconfigure(0, weight=1)
 
 frame = ctk.CTkFrame(app, bg_color='#1a1a1a', fg_color="transparent")
@@ -1278,7 +1405,7 @@ evil_info_button = ctk.CTkButton(grid0,
 evil_info_button.grid(row=0, column=3, sticky='w', padx=(5, 0))
 
 resize_button = ctk.CTkButton(grid0,
-                              width=0, 
+                              width=0,
                               height=25,
                               text='< >',
                               font=("", 16, "bold"),
@@ -1339,13 +1466,16 @@ clear_button.grid(row=0, column=3, padx=(0, 5), sticky='e')
 
 solve_button = ctk.CTkButton(grid2,
                              width=130,
-                             text="Solve", 
+                             text="Solve",
                              font=("", 20),
                              command=hatch_puzzle)
 solve_button.grid(row=0, column=4, sticky='e')
 
+screen_w = app.winfo_screenwidth()
+screen_h = app.winfo_screenheight()
+
 # defaults
-settings = {
+DEFAULT_SETTINGS = {
     hatch_puzzle: "Return",
     clear_entries: "y",
     order_playback: "F1",
@@ -1353,13 +1483,14 @@ settings = {
     "main_window_location":           f"+{int(screen_w//3)}+{int(screen_h//1.49)}",
     "main_window_size":               "545x272",
     "settings_window_location":       f"+{int(screen_w-225)}+{int(screen_h//10)}",
-    "info_window_location":           f"+0+0",
+    "info_window_location":           "+0+0",
     "evil_solutions_window_location": f"+0+{int(screen_h//2.85)}",
     "console_window_location":        f"+{int(screen_w//1.4)}+{int(screen_h//2.55)}",
     "order_window_location":          f"+{int(screen_w//2.55)}+{int(screen_h//98)}",
     "order_window_size":              411,
     "puzzle4_window_location":        f"+{int(screen_w//2.75)}+{int(screen_h//2.05)}"
 }
+settings = DEFAULT_SETTINGS.copy()
 load_settings()
 app.geometry(settings["main_window_size"] + settings["main_window_location"])
 
@@ -1369,7 +1500,6 @@ open_info()
 open_order()
 open_puzzle4()
 open_evil_solutions()
-
 app.update()
 
 # Keeping track of subwindows to minimize along side main window
@@ -1388,11 +1518,13 @@ def on_minimize(event):
             if win and win.winfo_exists() and win.state() != 'withdrawn':
                 visible_subwindows.append(win)
                 win.withdraw()
+
 def on_restore(event):
     if event.widget == app:
         for win in visible_subwindows:
             if win and win.winfo_exists():
                 win.deiconify()
+
 app.bind('<Unmap>', on_minimize)
 app.bind('<Map>', on_restore)
 
@@ -1407,6 +1539,6 @@ app_width = app.winfo_width()
 def on_close():
     save_settings()
     app.destroy()
-app.protocol("WM_DELETE_WINDOW", on_close)
 
+app.protocol("WM_DELETE_WINDOW", on_close)
 app.mainloop()
